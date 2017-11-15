@@ -1,0 +1,48 @@
+object VectGraph: TVectGraph
+  Left = 2042
+  Height = 632
+  Top = 104
+  Width = 681
+  Caption = 'VectGraph'
+  ClientHeight = 632
+  ClientWidth = 681
+  OnCreate = FormCreate
+  LCLVersion = '1.6.4.0'
+  object DrawArea: TPaintBox
+    Left = 176
+    Height = 592
+    Top = 40
+    Width = 505
+    Align = alClient
+    OnMouseDown = DrawAreaMouseDown
+    OnMouseMove = DrawAreaMouseMove
+    OnMouseUp = DrawAreaMouseUp
+    OnPaint = DrawAreaPaint
+  end
+  object ToolsBar: TToolBar
+    Left = 0
+    Height = 40
+    Top = 0
+    Width = 681
+    Caption = 'ToolsBar'
+    TabOrder = 0
+  end
+  object AttributesBar: TToolBar
+    Left = 0
+    Height = 592
+    Top = 40
+    Width = 176
+    Align = alLeft
+    Caption = 'AttributesBar'
+    TabOrder = 1
+    object Scale: TEdit
+      Left = 1
+      Height = 23
+      Top = 569
+      Width = 175
+      Align = alBottom
+      TabOrder = 0
+      Text = 'Scale'
+    end
+  end
+end
