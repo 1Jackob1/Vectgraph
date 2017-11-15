@@ -31,8 +31,8 @@ implementation
 
   function ToDP(APoint: TPoint): TDoublePoint;
   begin
-    Result.X := APoint.X;
-    Result.Y := APoint.Y;
+    Result.X := APoint.X*1.0;
+    Result.Y := APoint.Y*1.0;
   end;
 
   function ToDRect(AFDPoint,ASDPoint : TDoublePoint): TDRect;

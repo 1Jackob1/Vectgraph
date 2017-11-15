@@ -51,6 +51,7 @@ var i:integer;
 begin
   IsDrawing:=false;
   for i:=0 to High(ToolConst.Tools) do begin
+
     Bttn:=TSpeedButton.Create(ToolsBar);
     Bttn.Parent:=ToolsBar;
     Bttn.Width:=TOOL_BUTTON_SIZE;
@@ -62,7 +63,9 @@ begin
     BttnImg:= TPicture.Create;
     BttnImg.LoadFromFile(ToolConst.Tools[i].ClassName+'.png');
     Bttn.Glyph:=BttnImg.Bitmap;
+
     end;
+
     objTransform:=TTransform.Create(DrawArea.Width, DrawArea.Height);
     EditFigure:=TEditCreate.Create;
     EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
@@ -105,6 +108,7 @@ procedure TVectGraph.DrawAreaPaint(Sender: TObject);
 var
     i: Integer;
 begin
+
   for i:=0 to Length(FigureItems)-1 do begin
      if i = 0 then begin
      MaxDACoor:=FigureItems[0].MaxCoor;
@@ -114,15 +118,17 @@ begin
        MaxDACoor:=MaxPoint(FigureItems[i].MaxCoor, MaxDACoor);
        MinDACoor:=MinPoint(FigureItems[i].MinCoor, MinDACoor);
      end;
-     FigureItems[i].Draw(Canvas);
+     FigureItems[i].Draw(DrawArea.Canvas);
    end;
-  DrawArea.Invalidate;
+   // DrawArea.Invalidate;
 end;
 
 procedure TVectGraph.BttnToolClck(Sender: TObject);
 begin
    ToolCode:=TSpeedButton(Sender).Tag;
+   //if ((ToolCode <> 6) or(ToolCode<>5)) then
    EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
+   ToolCode:=TSpeedButton(Sender).Tag;
 end;
 
 

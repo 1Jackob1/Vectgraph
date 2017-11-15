@@ -31,9 +31,8 @@ implementation
 
 constructor TTransform.Create(DAWidth, DAHeight:Real);
 begin
-  Offset.x:=0.0;
-  Offset.y:=0.0;
-  Zoom:=MIN_ZOOM;
+  Offset:=ToDP(Point(0,0));
+  Zoom:=MIN_ZOOM*100;
 end;
 
 procedure TTransform.ZoomLoupe;
@@ -92,9 +91,12 @@ end;
 
 
 function TTransform.S2W(APoint: TPoint): TDoublePoint;
+var
+    DP: TDoublePoint;
 begin
-   Result:= ToDP((APoint.x / objTransform.Zoom) - objTransform.Offset.x,
-            (APoint.y / objTransform.Zoom) - objTransform.Offset.y);
+   DP:=ToDP(APoint);
+   Result:= ToDP((DP.x / objTransform.Zoom) - objTransform.Offset.x,
+            (DP.y / objTransform.Zoom) - objTransform.Offset.y);
 end;
 
 function TTransform.W2S(ADoublePoint: TDoublePoint): TPoint;

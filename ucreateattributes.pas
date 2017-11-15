@@ -115,7 +115,7 @@ end;
 
 procedure TFigureAttr.OnChange(Sender: TObject);
 begin
-     DAInvalidate;
+     //DAInvalidate;
 end;
 
 destructor TFigureAttr.Destroy;
@@ -133,8 +133,12 @@ end;
 procedure TEditCreate.SelectAttrs(AObj: TPersistent);
 var
   PropertyList: PPropList;
-  i, j, g:Integer;
+  i, j:Integer;
 begin
+   if Aobj = nil then begin
+   //Cls;
+   Exit;
+   end;
    obj:=AObj;
    for i:=0 to GetPropList(AObj, PropertyList) - 1 do begin
      for j:=0 to Length(EditToolsContainer.EditTool)-1 do begin
@@ -196,9 +200,7 @@ end;
 
 constructor TLineStyleEdit.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
 var
-  tmpLineType: TFPPenStyle;
   i: Integer;
-  str: String;
 begin
   LineStyleComboBox:= TComboBox.Create(VectGraph.AttributesBar);
   LineStyleComboBox.Parent:=VectGraph.AttributesBar;
@@ -210,19 +212,18 @@ begin
   LineStyleComboBox.ReadOnly := True;
   LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
   inherited Create(AObj, AAboutAttr);
-  str:=AttrValues.Values[AboutAttr^.Name];
   if AttrValues.Values[AboutAttr^.Name] <> '' then
     SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
-  i:=9;
 end;
 
 
 procedure TLineStyleEdit.OnChange(Sender: TObject);
 var
-  i: Integer;
+tmp: Integer;
 begin
-  SetInt64Prop(obj, AboutAttr, LineStyleComboBox.ItemIndex);
-  AttrValues.Values[AboutAttr^.Name] := intToStr(LineStyleComboBox.ItemIndex);
+  SetInt64Prop(obj, AboutAttr, TComboBox(Sender).ItemIndex);
+  tmp:=LineStyleComboBox.ItemIndex;
+  AttrValues.Values[AboutAttr^.Name] := intToStr(TComboBox(Sender).ItemIndex);
   inherited OnChange(Sender);
 end;
 
@@ -269,8 +270,6 @@ end;
  { TEditSpin }
 
 constructor TEditSpin.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
-var
-  i: integer;
 begin
   DSpin := TSpinEdit.Create(nil);
   DSpin.MinValue := 1;
@@ -307,7 +306,7 @@ EditToolsContainer.RegTool('FFillType',TBrushStyleEdit);
 EditToolsContainer.RegTool('FFlexure',TEditSpin);
 
 AttrValues:=TStringList.Create;
-AttrValues.Values['FLineType']:='0';//string(START_LINE_STYLE);
+AttrValues.Values['FLineType']:='2';//string(START_LINE_STYLE);
 AttrValues.Values['FFillType']:='0';//string(START_FILL_STYLE);
 AttrValues.Values['FFlexure']:='15';//string(START_FLEXURE_VALUE);
 
