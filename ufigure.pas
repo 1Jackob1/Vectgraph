@@ -57,6 +57,7 @@ type
     published
       property FLineType: TFPPenStyle   read LineType write LineType;
       property FFillType: TFPBrushStyle read RFillType write RFillType;
+      property FLineWidth: Integer read LineWidth write LineWidth;
   end;
 
   { TRoundRect }
@@ -74,6 +75,7 @@ type
       property FLineType: TFPPenStyle   read LineType write LineType;
       property FFillType: TFPBrushStyle read RFillType write RFillType;
       property FFlexure:  Integer       read Flexure  write Flexure;
+      property FLineWidth: Integer read LineWidth write LineWidth;
   end;
 
   { TEllipse }
@@ -81,13 +83,11 @@ type
   TEllipse = class(TSmlrRect)
      public
       constructor Create;
-      {procedure MouseMove(ADPoint: TDoublePoint); override;
-      procedure NextPoint(ADPoint: TDoublePoint); override;
-      procedure MouseUp(ADPoint: TDoublePoint);   override;}
       procedure Draw(ACanvas: TCanvas);           override;
     published
       property FLineType: TFPPenStyle   read LineType write LineType;
       property FFillType: TFPBrushStyle read RFillType write RFillType;
+      property FLineWidth: Integer read LineWidth write LineWidth;
   end;
 
   { TPolyLine }
@@ -103,6 +103,7 @@ type
       procedure NextLine(ADPoint: TDoublePoint);
     published
       property FLineType: TFPPenStyle read LineType write LineType;
+      property FLineWidth: Integer read LineWidth write LineWidth;
   end;
   var
     CurrentStyles: Styles;

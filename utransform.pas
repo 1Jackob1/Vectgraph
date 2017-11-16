@@ -32,23 +32,21 @@ implementation
 constructor TTransform.Create(DAWidth, DAHeight:Real);
 begin
   Offset:=ToDP(Point(0,0));
-  Zoom:=MIN_ZOOM*100;
+  Zoom:=MIN_ZOOM;
 end;
 
 procedure TTransform.ZoomLoupe;
 begin
-  if Zoom<=100 then
-     if Zoom > 1 then
-        Zoom:=Zoom+1
+  if Zoom*2>= MAX_ZOOM then
+     Zoom:=MAX_ZOOM
   else
     Zoom:=Zoom*2;
 end;
 
 procedure TTransform.UnZoomLoupe;
 begin
-  if Zoom >= 0.125 then
-    if Zoom > 1 then
-      Zoom := Zoom - 1
+  if Zoom / 2<=MIN_ZOOM then
+      Zoom := MIN_ZOOM
     else
       Zoom := Zoom / 2;
 end;
@@ -57,7 +55,7 @@ procedure TTransform.RegionLoupe(DAWidth, DAHeight:Real; LRect: TRect);
 var tmp: Integer;
     tmpZoom: Real;
 begin
-   if LRect.BottomRight.x<LRect.TopLeft.x then
+  {if LRect.BottomRight.x<LRect.TopLeft.x then
      begin
        tmp:=LRect.TopLeft.x;
        LRect.TopLeft.x:=LRect.BottomRight.x;
@@ -68,7 +66,7 @@ begin
        tmp:=LRect.TopLeft.y;
        LRect.TopLeft.y:=LRect.BottomRight.y;
        LRect.BottomRight.y:=tmp;
-     end;
+     end;}
    if(LRect.BottomRight.x<>LRect.TopLeft.x) and
      (LRect.BottomRight.y<>LRect.TopLeft.y) then begin
        if (DAWidth / (LRect.BottomRight.x - LRect.TopLeft.x)) <

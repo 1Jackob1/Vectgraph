@@ -63,8 +63,8 @@ type
       TOOL_BUTTON_SIZE:    Integer       = 36;
       TOOL_BUTTON_MARGIN:  Integer       = 2;
       TOOL_BUTTON_PADDING: Integer       = 2;
-      MIN_ZOOM: Real = 1;
-      MAX_ZOOM: Real = 1000;
+      MIN_ZOOM: Real = 100;
+      MAX_ZOOM: Real = 10000;
 
 implementation
 

@@ -225,7 +225,6 @@ begin
   LineStyleComboBox.ReadOnly := True;
   LineStyleComboBox.ItemIndex:=1;
   LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
-  //inherited Create(AObj, AAboutAttr);
   if AttrValues.Values[AboutAttr^.Name] <> '' then
     SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
 end;
@@ -267,6 +266,7 @@ begin
   //inherited Create(AObj, AAboutAttr);
   if (AttrValues.Values[AboutAttr^.Name] <> '') then
    SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+  BrushStyleComboBox.ItemIndex:=1;
   end;
 
 procedure TBrushStyleEdit.OnChange(Sender: TObject);
@@ -299,12 +299,19 @@ begin
   //inherited Create(AObj, AAboutAttr);
   if (AttrValues.Values[AboutAttr^.Name] <> '') then
    SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+  if AboutAttr^.Name='FLineWidth' then
+     DSpin.Value:=CurrentStyles.LineWidth
+  else
+     DSpin.Value:=CurrentStyles.Flexure;
 end;
 
 procedure TEditSpin.OnChange(Sender: TObject);
 begin
   SetInt64Prop(obj, AboutAttr, TSpinEdit(Sender).Value);
-  CurrentStyles.Flexure:=TSpinEdit(Sender).Value;
+  if AboutAttr^.Name='FLineWidth' then
+     CurrentStyles.LineWidth:=TSpinEdit(Sender).Value;
+  if AboutAttr^.Name='FFlexure' then
+     CurrentStyles.Flexure:=TSpinEdit(Sender).Value;
   AttrValues.Values[AboutAttr^.Name] := intToStr(TSpinEdit(Sender).Value);
   inherited OnChange(Sender);
 end;

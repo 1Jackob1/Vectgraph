@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  ComCtrls, Buttons, EditBtn, StdCtrls, UTool, UTransform, UComparator, UDefine,
-  UCreateAttributes;
+  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, UTool, UTransform, UComparator,
+  UDefine, UCreateAttributes;
 
 type
 
@@ -15,7 +15,7 @@ type
 
   TVectGraph = class(TForm)
     DrawArea: TPaintBox;
-    Scale: TEdit;
+    ScaleSpin: TFloatSpinEdit;
     HorizontalScroll: TScrollBar;
     VerticalScroll: TScrollBar;
     TToolZoomLoupe: TSpeedButton;
@@ -33,6 +33,7 @@ type
     procedure BttnToolClck(Sender: TObject);
     procedure HorizontalScrollScroll(Sender: TObject; ScrollCode: TScrollCode;
       var ScrollPos: Integer);
+    procedure ScaleSpinChange(Sender: TObject);
     procedure TToolZoomLoupeClick(Sender: TObject);
     procedure TToolUnZoomLoupeClick(Sender: TObject);
     procedure ScrolCalc;
@@ -84,8 +85,9 @@ begin
     EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
     EditFigure.SetBrushColor(START_FILL_COLOR);
     EditFigure.SetPenColor(START_LINE_COLOR);
+    ScaleSpin.MaxValue:=MAX_ZOOM;
+    ScaleSpin.MinValue:=MIN_ZOOM;
 
-    Scale.Caption:='Масштаб '+FloatToStr(objTransform.Zoom);
 
 end;
 
@@ -114,7 +116,7 @@ begin
   IsDrawing:=false;
   ToolConst.Tools[ToolCode].MouseUp(Point(DrawArea.Width, DrawArea.Height));
   DrawArea.Invalidate;
-  Scale.Caption:='Масштаб '+FloatToStr(objTransform.Zoom);
+  ScaleSpin.Value:=objTransform.Zoom;
   end;
 end;
 
@@ -150,17 +152,23 @@ begin
   DrawArea.Invalidate;
 end;
 
+procedure TVectGraph.ScaleSpinChange(Sender: TObject);
+begin
+  objTransform.Zoom:=ScaleSpin.Value;
+  DrawArea.Invalidate;
+end;
+
 procedure TVectGraph.TToolZoomLoupeClick(Sender: TObject);
 begin
   objTransform.ZoomLoupe;
-  Scale.Caption:='Масштаб '+FloatToStr(objTransform.Zoom);
+  ScaleSpin.Value:=objTransform.Zoom;
   DrawArea.Invalidate;
 end;
 
 procedure TVectGraph.TToolUnZoomLoupeClick(Sender: TObject);
 begin
   objTransform.UnZoomLoupe;
-  Scale.Caption:='Масштаб '+FloatToStr(objTransform.Zoom);
+  ScaleSpin.Value:=objTransform.Zoom;
   DrawArea.Invalidate;
 end;
 

@@ -25,6 +25,8 @@ object VectGraph: TVectGraph
     Top = 0
     Width = 1115
     Caption = 'ToolsBar'
+    Color = clSilver
+    ParentColor = False
     TabOrder = 0
     object TToolZoomLoupe: TSpeedButton
       Left = 1
@@ -363,17 +365,25 @@ object VectGraph: TVectGraph
     Top = 40
     Width = 128
     Align = alLeft
+    BorderWidth = 3
     Caption = 'AttributesBar'
+    Color = clSilver
+    ParentColor = False
     TabOrder = 1
-    object Scale: TEdit
+    object ScaleSpin: TFloatSpinEdit
       Left = 1
       Height = 23
       Top = 415
       Width = 127
       Align = alBottom
-      ReadOnly = True
+      AutoSelect = False
+      AutoSize = False
+      Increment = 10
+      MaxValue = 1000
+      MinValue = 100
+      OnChange = ScaleSpinChange
       TabOrder = 0
-      Text = 'Scale'
+      Value = 100
     end
   end
   object HorizontalScroll: TScrollBar
