@@ -5,7 +5,7 @@ unit UTool;
 interface
 
 uses
-  Classes, SysUtils, Graphics, UFigure, UDefine, UTransform, UComparator;
+  Classes, SysUtils, Graphics, UFigure, UDefine, UTransform, UComparator, UCreateAttributes;
 
 type
 
@@ -115,7 +115,7 @@ implementation
 { TTool }
  procedure TTool.MouseUp(APoint: TPoint);
  begin
-  ///
+  //EditFigure.SelectAttrs(CreateAttributes);
  end;
 
  function TTool.CreateAttributes: TPersistent;

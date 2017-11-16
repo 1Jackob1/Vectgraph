@@ -26,6 +26,15 @@ type
      LineStyle: TFPPenStyle;
      end;
 
+  Styles = record
+     LineStyle: TFPPenStyle;
+     LineWidth: Integer;
+     LineColor: TColor;
+     FillStyle: TFPBrushStyle;
+     FillColor: TColor;
+     Flexure  : Integer;
+  end;
+
     const
       FillStyles: array[0..7] of RecFillType = (
       (_Type: 'Empty';      BrushStyle: bsClear),
@@ -54,8 +63,8 @@ type
       TOOL_BUTTON_SIZE:    Integer       = 36;
       TOOL_BUTTON_MARGIN:  Integer       = 2;
       TOOL_BUTTON_PADDING: Integer       = 2;
-      MIN_ZOOM: Real = 0.01;
-      MAX_ZOOM: Real = 100;
+      MIN_ZOOM: Real = 1;
+      MAX_ZOOM: Real = 1000;
 
 implementation
 

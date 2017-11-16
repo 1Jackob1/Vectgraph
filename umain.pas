@@ -133,6 +133,7 @@ begin
      end;
      FigureItems[i].Draw(DrawArea.Canvas);
    end;
+  ScrolCalc;
 end;
 
 procedure TVectGraph.BttnToolClck(Sender: TObject);

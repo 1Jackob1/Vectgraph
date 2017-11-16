@@ -104,17 +104,18 @@ type
     published
       property FLineType: TFPPenStyle read LineType write LineType;
   end;
-
+  var
+    CurrentStyles: Styles;
 implementation
 procedure TFigure.MouseUp(ADPoint: TDoublePoint);
 begin end;
 procedure TFigure.SetDefFigrStyles;
 begin
-  LineWidth := START_LINE_WIDTH;
-  LineColor := START_LINE_COLOR;
-  FillColor := START_FILL_COLOR;
-  LineType  := START_LINE_STYLE;
-  FillType  := START_FILL_STYLE;
+  LineWidth := CurrentStyles.LineWidth;  //START_LINE_WIDTH;
+  LineColor := CurrentStyles.LineColor;//START_LINE_COLOR;
+  FillColor := CurrentStyles.FillColor;//START_FILL_COLOR;
+  LineType  := CurrentStyles.LineStyle;//START_LINE_STYLE;
+  FillType  := CurrentStyles.FillStyle;//START_FILL_STYLE;
 end;
 
  { TSmlrRect }
@@ -134,7 +135,7 @@ procedure TSmlrRect.Draw(ACanvas: TCanvas);
     with ACanvas do begin
       Pen.Width   := LineWidth;
       Pen.Style   := LineType;
-      Brush.Style := RFillType;
+      Brush.Style := FillType;
       Pen.Color   := LineColor;
       Brush.Color := FillColor;
       MaxCoor     := MaxPoint(DPRect.Top, DPRect.Bottom);
@@ -161,7 +162,7 @@ end;
 constructor TRoundRect.Create;
 begin
   SetDefFigrStyles;
-  Flexure := START_FLEXURE_VALUE;
+  Flexure := CurrentStyles.Flexure;
 end;
 
 procedure TRoundRect.Draw(ACanvas: TCanvas);
@@ -190,8 +191,8 @@ end;
 
 constructor TPolyLine.Create;
 begin
-  LineWidth := FLineWidth;//START_LINE_WIDTH;
-  LineType  := FLineType;//START_LINE_STYLE;
+  LineWidth := CurrentStyles.LineWidth;//START_LINE_WIDTH;
+  LineType  := CurrentStyles.LineStyle;//START_LINE_STYLE;
 end;
 
 procedure TPolyLine.NextPoint(ADPoint: TDoublePoint);

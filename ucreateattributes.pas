@@ -167,12 +167,14 @@ end;
 procedure TEditCreate.SetPenColor(AColor: TColor);
 begin
   PenColor := AColor;
+  CurrentStyles.LineColor:=AColor;
   SetColor('FLineColor', AColor);
 end;
 
 procedure TEditCreate.SetBrushColor(AColor: TColor);
 begin
-  BrushColor := AColor;
+  BrushColor := clBlue;
+  CurrentStyles.FillColor:=clBlue;
   SetColor('FFillColor', AColor);
 end;
 
@@ -234,6 +236,7 @@ var
 tmp: Integer;
 begin
   SetInt64Prop(obj, AboutAttr, TComboBox(Sender).ItemIndex);
+  CurrentStyles.LineStyle:=LineStyles[TComboBox(Sender).ItemIndex].LineStyle;
   AttrValues.Values[AboutAttr^.Name] := intToStr(TComboBox(Sender).ItemIndex);
   inherited OnChange(Sender);
 end;
@@ -269,6 +272,7 @@ begin
 procedure TBrushStyleEdit.OnChange(Sender: TObject);
 begin
   SetInt64Prop(obj, AboutAttr, TCombobox(sender).ItemIndex);
+  CurrentStyles.FillStyle:=FillStyles[TCombobox(sender).ItemIndex].BrushStyle;
   AttrValues.Values[AboutAttr^.Name] := intToStr(TCombobox(sender).ItemIndex);
   inherited OnChange(Sender);
 end;
@@ -300,6 +304,7 @@ end;
 procedure TEditSpin.OnChange(Sender: TObject);
 begin
   SetInt64Prop(obj, AboutAttr, TSpinEdit(Sender).Value);
+  CurrentStyles.Flexure:=TSpinEdit(Sender).Value;
   AttrValues.Values[AboutAttr^.Name] := intToStr(TSpinEdit(Sender).Value);
   inherited OnChange(Sender);
 end;
