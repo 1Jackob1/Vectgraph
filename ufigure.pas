@@ -26,6 +26,7 @@ type
      procedure SetDefFigrStyles;
      property FLineWidth: Integer read LineWidth write LineWidth;
      property FLineColor: TColor read LineColor write LineColor;
+     property FLineType:  TFPPenStyle read LineType write LineType;
   end;
 
   { TSmlrRect }
@@ -189,8 +190,8 @@ end;
 
 constructor TPolyLine.Create;
 begin
-  LineWidth := START_LINE_WIDTH;
-  LineType  := START_LINE_STYLE;
+  LineWidth := FLineWidth;//START_LINE_WIDTH;
+  LineType  := FLineType;//START_LINE_STYLE;
 end;
 
 procedure TPolyLine.NextPoint(ADPoint: TDoublePoint);

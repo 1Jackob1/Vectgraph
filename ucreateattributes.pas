@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, typinfo, Graphics, ExtCtrls, StdCtrls, Controls, spin,
-  LCLType, FPCanvas, UComparator, Dialogs, UDefine;
+  LCLType, FPCanvas, UComparator, Dialogs, UDefine, UFigure;
 
 type
 
@@ -35,6 +35,7 @@ type
       procedure SetColor(AString: String; AColor: TColor);
     public
       constructor Create; virtual;
+      destructor Destroy;
       procedure SelectAttrs(AObj: TPersistent);
       procedure Cls;
       procedure SetPenColor(AColor: TColor);
@@ -115,7 +116,7 @@ end;
 
 procedure TFigureAttr.OnChange(Sender: TObject);
 begin
-     //DAInvalidate;
+     VectGraph.DrawArea.Invalidate;
 end;
 
 destructor TFigureAttr.Destroy;
@@ -187,6 +188,15 @@ begin
   VectGraph.DrawArea.Invalidate;
 end;
 
+destructor TEditCreate.Destroy;
+var
+  i: Integer;
+begin
+  for i:=0 to High(EditTools) do
+    EditTools[i].Destroy;
+  SetLength(EditTools,0);
+end;
+
  { TRegEditTools }
 
 procedure TRegEditTools.RegTool(AItemName: ShortString; AAttr: FigureAttrClass);
@@ -202,6 +212,7 @@ constructor TLineStyleEdit.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
 var
   i: Integer;
 begin
+  inherited Create(AObj, AAboutAttr);
   LineStyleComboBox:= TComboBox.Create(VectGraph.AttributesBar);
   LineStyleComboBox.Parent:=VectGraph.AttributesBar;
   LineStyleComboBox.Left := trunc(VectGraph.AttributesBar.width * 0.5) + 2;
@@ -210,8 +221,9 @@ begin
       LineStyleComboBox.Items.Add(LineStyles[i]._Type);
   LineStyleComboBox.OnChange := @OnChange;
   LineStyleComboBox.ReadOnly := True;
+  LineStyleComboBox.ItemIndex:=1;
   LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
-  inherited Create(AObj, AAboutAttr);
+  //inherited Create(AObj, AAboutAttr);
   if AttrValues.Values[AboutAttr^.Name] <> '' then
     SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
 end;
@@ -222,7 +234,6 @@ var
 tmp: Integer;
 begin
   SetInt64Prop(obj, AboutAttr, TComboBox(Sender).ItemIndex);
-  tmp:=LineStyleComboBox.ItemIndex;
   AttrValues.Values[AboutAttr^.Name] := intToStr(TComboBox(Sender).ItemIndex);
   inherited OnChange(Sender);
 end;
@@ -239,6 +250,7 @@ constructor TBrushStyleEdit.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
   var
  i: Integer;
 begin
+  inherited Create(AObj, AAboutAttr);
   BrushStyleComboBox := TComboBox.Create(nil);
   BrushStyleComboBox.Parent := VectGraph.AttributesBar;
   BrushStyleComboBox.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
@@ -249,7 +261,7 @@ begin
   BrushStyleComboBox.Style := csOwnerDrawFixed;
   BrushStyleComboBox.ReadOnly := True;
   BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
-  inherited Create(AObj, AAboutAttr);
+  //inherited Create(AObj, AAboutAttr);
   if (AttrValues.Values[AboutAttr^.Name] <> '') then
    SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
   end;
@@ -271,6 +283,7 @@ end;
 
 constructor TEditSpin.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
 begin
+  inherited Create(AObj, AAboutAttr);
   DSpin := TSpinEdit.Create(nil);
   DSpin.MinValue := 1;
   DSpin.MaxValue := 100;
@@ -279,7 +292,7 @@ begin
   DSpin.width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
   DSpin.OnChange := @OnChange;
   DSpin.Top := VectGraph.AttributesBar.Tag;
-  inherited Create(AObj, AAboutAttr);
+  //inherited Create(AObj, AAboutAttr);
   if (AttrValues.Values[AboutAttr^.Name] <> '') then
    SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
 end;
@@ -306,6 +319,7 @@ EditToolsContainer.RegTool('FFillType',TBrushStyleEdit);
 EditToolsContainer.RegTool('FFlexure',TEditSpin);
 
 AttrValues:=TStringList.Create;
+AttrValues.Values['FLineWidth']:='4';
 AttrValues.Values['FLineType']:='2';//string(START_LINE_STYLE);
 AttrValues.Values['FFillType']:='0';//string(START_FILL_STYLE);
 AttrValues.Values['FFlexure']:='15';//string(START_FLEXURE_VALUE);
