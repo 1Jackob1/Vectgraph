@@ -1,5 +1,5 @@
 unit UTransform;
-//vahob
+
 {$mode objfpc}{$H+}
 
 interface
@@ -20,7 +20,6 @@ type
     procedure ZoomLoupe;
     procedure UnZoomLoupe;
     procedure RegionLoupe(DAWidth, DAHeight:Real; LRect: TRect);
-    //function ToDP(APoint: TPoint): TDoublePoint;
     function S2W(APoint: TPoint): TDoublePoint;
     function W2S(ADoublePoint: TDoublePoint): TPoint;
   end;
@@ -55,7 +54,7 @@ procedure TTransform.RegionLoupe(DAWidth, DAHeight:Real; LRect: TRect);
 var tmp: Integer;
     tmpZoom: Real;
 begin
-  {if LRect.BottomRight.x<LRect.TopLeft.x then
+  if LRect.BottomRight.x<LRect.TopLeft.x then
      begin
        tmp:=LRect.TopLeft.x;
        LRect.TopLeft.x:=LRect.BottomRight.x;
@@ -66,7 +65,7 @@ begin
        tmp:=LRect.TopLeft.y;
        LRect.TopLeft.y:=LRect.BottomRight.y;
        LRect.BottomRight.y:=tmp;
-     end;}
+     end;
    if(LRect.BottomRight.x<>LRect.TopLeft.x) and
      (LRect.BottomRight.y<>LRect.TopLeft.y) then begin
        if (DAWidth / (LRect.BottomRight.x - LRect.TopLeft.x)) <
@@ -78,7 +77,8 @@ begin
         tmpZoom :=  DAHeight / (LRect.BottomRight.y - LRect.TopLeft.y);
     end;
 
-    if (Zoom <= 100) then Zoom *=  tmpZoom;
+    if (Zoom <= MAX_ZOOM) then Zoom *=  tmpZoom;
+    if (Zoom * tmpZoom < 2 ) then Zoom:=1;
     Offset.x += ((DAWidth / 2) - ((((LRect.BottomRight.x - LRect.TopLeft.x) *
             tmpZoom) / 2) + LRect.TopLeft.x * tmpZoom)) / Zoom;
     Offset.y += ((DAHeight / 2) - ((((lRect.BottomRight.y - LRect.TopLeft.y) *

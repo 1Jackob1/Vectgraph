@@ -46,6 +46,7 @@ type
       (_Type: 'Cross';      BrushStyle: bsCross),
       (_Type: 'DiagCross';  BrushStyle: bsDiagCross)
       );
+
       LineStyles: array[0..4] of RecLineType =(
        (_Type: '―';     LineStyle: psSolid),
        (_Type: '――';    LineStyle: psDash),
@@ -53,13 +54,7 @@ type
        (_Type: '― •';   LineStyle: psDashDot),
        (_Type: '― • •'; LineStyle: psDashDotDot)
         );
-      START_LINE_WIDTH:    Integer       = 1;
-      START_LINE_STYLE:    TFPPenStyle   = psSolid;//LineStyles[0].LineStyle;
-      START_FILL_STYLE:    TFPBrushStyle = bsSolid;//FillStyles[0].BrushStyle;
-      START_FILL_COLOR:    TColor        = clWhite;
-      START_LINE_COLOR:    TColor        = clBlack;
-      START_FLEXURE_VALUE: Integer       = 10;
-      START_ZOOM:          Integer       = 1;
+
       TOOL_BUTTON_SIZE:    Integer       = 36;
       TOOL_BUTTON_MARGIN:  Integer       = 2;
       TOOL_BUTTON_PADDING: Integer       = 2;

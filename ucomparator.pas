@@ -1,5 +1,5 @@
 unit UComparator;
-//vahob
+
 {$mode objfpc}{$H+}
 
 interface

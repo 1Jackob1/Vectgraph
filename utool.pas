@@ -1,11 +1,12 @@
 unit UTool;
-//vahob
+
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, Graphics, UFigure, UDefine, UTransform, UComparator, UCreateAttributes;
+  Classes, SysUtils, Graphics, UFigure, UDefine, UTransform, UComparator,
+  UCreateAttributes;
 
 type
 
@@ -31,7 +32,7 @@ type
       TToolArray: array of TTool;
     public
       procedure ToolReg(ATToolClass: TToolClass);
-      property Tools: TToolArr read TToolArray;
+      property  Tools: TToolArr read TToolArray;
 
   end;
 
@@ -53,15 +54,6 @@ type
     procedure MouseUp(  APoint: TPoint);     override;
   end;
 
-  { TToolPolyLine }
-
-  {TToolPolyLine = class(TTool)
-    //function  CreateAttributes: TPersistent; override;
-    procedure MouseMove(APoint: TPoint);     override;
-    procedure MouseDown(APoint: TPoint);     override;
-    procedure MouseUp(  APoint: TPoint);     override;
-  end;
-  }
   { TToolRectangle }
 
   TToolRectangle = class(TTool)
@@ -109,13 +101,12 @@ type
  var
     ToolConst: TToolReg;
     tmpDP: TDoublePoint;
-    FigureItems: array of TFigure;
+    FigureItems, History: array of TFigure;
 implementation
 
 { TTool }
  procedure TTool.MouseUp(APoint: TPoint);
  begin
-  //EditFigure.SelectAttrs(CreateAttributes);
  end;
 
  function TTool.CreateAttributes: TPersistent;
@@ -127,18 +118,18 @@ implementation
 
  function TToolLine.CreateAttributes: TPersistent;
  begin
-   objFigure:=TPolyLine.Create;
-   Result:=inherited CreateAttributes;
+   objFigure := TPolyLine.Create;
+   Result    := inherited CreateAttributes;
  end;
 
  procedure TToolLine.MouseDown(APoint: TPoint);
  var
    DP: TDoublePoint;
  begin
-    objFigure:= TPolyLine.Create;
-    SetLength(FigureItems,Length(FigureItems)+1);
-    FigureItems[High(FigureItems)]:=TPolyLine.Create;
-    DP:=objTransform.S2W(APoint);
+    objFigure := TPolyLine.Create;
+    SetLength(FigureItems, Length(FigureItems)+1);
+    FigureItems[High(FigureItems)] := TPolyLine.Create;
+    DP := objTransform.S2W(APoint);
     FigureItems[High(FigureItems)].NextPoint(DP);
    end;
 
@@ -157,8 +148,8 @@ end;
 
  function TToolPencil.CreateAttributes: TPersistent;
  begin
-   objFigure:=TPolyLine.Create;
-   Result:=inherited CreateAttributes;
+   objFigure := TPolyLine.Create;
+   Result    := inherited CreateAttributes;
  end;
 
  procedure TToolPencil.MouseDown(APoint: TPoint);
@@ -166,8 +157,8 @@ end;
    DP: TDoublePoint;
 begin
     SetLength(FigureItems,Length(FigureItems)+1);
-    FigureItems[High(FigureItems)]:=TPolyLine.Create;
-    DP:=objTransform.S2W(APoint);
+    FigureItems[High(FigureItems)] := TPolyLine.Create;
+    DP := objTransform.S2W(APoint);
     FigureItems[High(FigureItems)].NextPoint(DP);
 end;
 
@@ -186,8 +177,8 @@ end;
 
  function TToolRectangle.CreateAttributes: TPersistent;
  begin
-   objFigure:=TRectangle.Create;
-   Result:=inherited CreateAttributes;
+   objFigure := TRectangle.Create;
+   Result    := inherited CreateAttributes;
  end;
 
  procedure TToolRectangle.MouseDown(APoint: TPoint);
@@ -195,8 +186,8 @@ end;
    DP: TDoublePoint;
  begin
     SetLength(FigureItems,Length(FigureItems)+1);
-    FigureItems[High(FigureItems)]:=TRectangle.Create;
-    DP:=objTransform.S2W(APoint);
+    FigureItems[High(FigureItems)] := TRectangle.Create;
+    DP := objTransform.S2W(APoint);
     FigureItems[High(FigureItems)].NextPoint(DP);
  end;
 
@@ -214,8 +205,8 @@ end;
 
  function TToolRoundRect.CreateAttributes: TPersistent;
  begin
-   objFigure:=TRoundRect.Create;
-   Result:=inherited CreateAttributes;
+   objFigure := TRoundRect.Create;
+   Result    := inherited CreateAttributes;
  end;
 
  procedure TToolRoundRect.MouseDown(APoint: TPoint);
@@ -223,8 +214,8 @@ end;
    DP: TDoublePoint;
    begin
     SetLength(FigureItems,Length(FigureItems)+1);
-    FigureItems[High(FigureItems)]:=TRoundRect.Create;
-    DP:=objTransform.S2W(APoint);
+    FigureItems[High(FigureItems)] := TRoundRect.Create;
+    DP := objTransform.S2W(APoint);
     FigureItems[High(FigureItems)].NextPoint(DP);
    end;
 
@@ -241,8 +232,8 @@ end;
  { TToolEllipse }
  function TToolEllipse.CreateAttributes: TPersistent;
  begin
-   objFigure:=TEllipse.Create;
-   Result:=inherited CreateAttributes;
+   objFigure := TEllipse.Create;
+   Result    := inherited CreateAttributes;
  end;
 
  procedure TToolEllipse.MouseDown(APoint: TPoint);
@@ -250,8 +241,8 @@ end;
    DP: TDoublePoint;
    begin
     SetLength(FigureItems,Length(FigureItems)+1);
-    FigureItems[High(FigureItems)]:=TEllipse.Create;
-    DP:=objTransform.S2W(APoint);
+    FigureItems[High(FigureItems)] := TEllipse.Create;
+    DP := objTransform.S2W(APoint);
     FigureItems[High(FigureItems)].NextPoint(DP);
    end;
 
@@ -301,11 +292,12 @@ end;
 procedure TToolReg.ToolReg(ATToolClass: TToolClass);
 begin
   SetLength(TToolArray,Length(TToolArray)+1);
-  TToolArray[High(TToolArray)]:=ATToolClass.Create;
+  TToolArray[High(TToolArray)] := ATToolClass.Create;
 end;
 
 initialization
-  ToolConst:= TToolReg.Create;
+
+  ToolConst := TToolReg.Create;
   ToolConst.ToolReg(TToolPencil);
   ToolConst.ToolReg(TToolLine);
   ToolConst.ToolReg(TToolRectangle);
