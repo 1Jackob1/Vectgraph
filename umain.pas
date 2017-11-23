@@ -6,14 +6,18 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, UTool, UTransform,
-  UComparator, UDefine, UCreateAttributes;
+  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, UTool,
+  UTransform, UComparator, UDefine, UCreateAttributes;
 
 type
 
   { TVectGraph }
 
   TVectGraph = class(TForm)
+    ActionCls: TAction;
+    ActionUnDo: TAction;
+    ActionReDo: TAction;
+    ActionList1: TActionList;
     DrawArea: TPaintBox;
     MainMenu: TMainMenu;
     ItemProg: TMenuItem;
@@ -22,6 +26,7 @@ type
     EditionsShowAll: TMenuItem;
     EditionsUnDo: TMenuItem;
     EditionsReDo: TMenuItem;
+    EditionsCls: TMenuItem;
     ScaleSpin: TFloatSpinEdit;
     HorizontalScroll: TScrollBar;
     VerticalScroll: TScrollBar;
@@ -29,12 +34,16 @@ type
     TToolUnZoomLoupe: TSpeedButton;
     ToolsBar: TToolBar;
     AttributesBar: TToolBar;
+    procedure ActionClsExecute(Sender: TObject);
+    procedure ActionReDoExecute(Sender: TObject);
+    procedure ActionUnDoExecute(Sender: TObject);
     procedure DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure DrawAreaMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure DrawAreaMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure DrawAreaPaint(Sender: TObject);
+    procedure EditionsClsClick(Sender: TObject);
     procedure EditionsReDoClick(Sender: TObject);
     procedure EditionsShowAllClick(Sender: TObject);
     procedure EditionsUnDoClick(Sender: TObject);
@@ -111,6 +120,22 @@ begin
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
   end;
 end;
+
+procedure TVectGraph.ActionUnDoExecute(Sender: TObject);
+begin
+   EditionsUnDoClick(Sender);
+end;
+
+procedure TVectGraph.ActionReDoExecute(Sender: TObject);
+begin
+  EditionsReDoClick(Sender);
+end;
+
+procedure TVectGraph.ActionClsExecute(Sender: TObject);
+begin
+  EditionsClsClick(Sender);
+end;
+
  { MouseDown/Move/Up }
 procedure TVectGraph.DrawAreaMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: integer);
@@ -153,6 +178,24 @@ begin
     FigureItems[i].Draw(DrawArea.Canvas);
   end;
   ScrolCalc;
+end;
+
+procedure TVectGraph.EditionsClsClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i:=0 to Length(FigureItems) - 1 do
+   FreeAndNil(FigureItems[i]);
+  for i:=0 to Length(History) - 1 do
+   FreeAndNil(History[i]);
+  SetLength(FigureItems,0);
+  SetLength(History,0);
+  ScrolCalc;
+  DrawArea.Invalidate;
+  //EditionsShowAllClick(Sender);
+  //objTransform.Zoom:=MIN_ZOOM;
+  //ScaleSpin.Value:=objTransform.Zoom;
+
 end;
 
 { Un/ReDo }
