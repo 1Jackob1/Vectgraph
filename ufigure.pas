@@ -302,6 +302,7 @@ end;
 procedure TPolyLine.Draw(ACanvas: TCanvas);
 var
   i: integer;
+  FPoint,SPoint:TPoint;
 begin
   MaxCoor := ToDP(0, 0);
   MinCoor := ToDP(0, 0);
@@ -310,7 +311,15 @@ begin
   ACanvas.Pen.Style := LineType;
   for i := 0 to High(Vert) - 1 do
   begin
-    ACanvas.Line(objTransform.W2S(Vert[i]), objTransform.W2S(Vert[i + 1]));
+    FPoint:=objTransform.W2S(Vert[i]);
+    SPoint:=objTransform.W2S(Vert[i+1]);
+    ACanvas.Line(FPoint, SPoint);
+    if IsSelected then begin
+      ACanvas.Brush.Style:=bsSolid;
+      ACanvas.Brush.Color:=clBlack;
+      ACanvas.Ellipse(FPoint.X-2, FPoint.Y-2,FPoint.X+5, FPoint.Y+5);
+      ACanvas.Ellipse(SPoint.X-2, SPoint.Y-2,SPoint.X+5, SPoint.Y+5);
+    end;
     MinCoor := MinPoint(Vert[i], MinCoor);
     MaxCoor := MaxPoint(Vert[i], MaxCoor);
     MinCoor := MinPoint(Vert[i + 1], MinCoor);
