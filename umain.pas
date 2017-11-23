@@ -98,7 +98,7 @@ begin
     Bttn.GroupIndex := 1;
 
     BttnImg := TPicture.Create;
-    BttnImg.LoadFromFile(ToolConst.Tools[i].ClassName + '.png');
+    BttnImg.LoadFromFile('./icons/'+ToolConst.Tools[i].ClassName + '.png');
     Bttn.Glyph := BttnImg.Bitmap;
 
   end;
