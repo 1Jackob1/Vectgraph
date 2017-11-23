@@ -123,7 +123,7 @@ type
 
   { TSpecialRect }
 
-  TSpecialRect = class(TFigure)
+  TSpecialRect = class(TSmlrRect)
     constructor Create;
     procedure Draw(ACanvas: TCanvas); override;
   end;
@@ -151,13 +151,25 @@ end;
 procedure TFigure.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
 var
   cond1, cond2, cond3, cond4, cond5: boolean;
+  R1,R2:TRect;
 begin
-  cond1 := ((FAPoint <= FFAPoint) or (FAPoint >= FFAPoint));
-  cond2 := ((SAPoint <= FSAPoint) or (SAPoint >= FSAPoint));
-  cond3 := (SAPoint <= FFAPoint);
-  cond4 := ((FAPoint.X >= FFAPoint.X) and (SAPoint.X <= FFAPoint.X));
-  cond5 := ((FAPoint.Y >= FFAPoint.Y) and (SAPoint.Y <= FFAPoint.Y));
-  if (cond1 and cond2 and cond3) or cond4 or cond5 then
+  R2:=TRect.Create(FSAPoint,FFAPoint);
+  R1:=TRect.Create(SAPoint,FAPoint);
+  cond1 := ((R1.Top>=R2.Top) and (R1.Top<=R2.Bottom)) or
+           ((R1.Bottom>=R2.Top) and (R1.Bottom<=R2.Bottom));
+
+  cond2 := ((R1.Left<=R2.Left) and (R1.Left>=R2.Right)) or
+           ((R1.Right>=R2.Left) and (R1.Right<=R2.Right));
+
+  cond3 := (FAPoint>=FFAPoint) and (SAPoint<=FSAPoint);
+
+  cond4 := ((R1.Top<R2.Top) and (R1.Bottom<R2.Top)) or
+           ((R1.Top>R2.Bottom) and (R1.Bottom>R2.Bottom));
+
+  cond5 := ((R1.Left<R2.Left) and (R1.Right<R2.Left)) or
+           ((R1.Left>R2.Right) and (R1.Right>R2.Right));
+
+  if (cond1 or cond2 or cond3) and not cond4 and not cond5 then
     IsSelected := True;
 end;
 
@@ -200,10 +212,20 @@ begin
 end;
 
 procedure TRectangle.Draw(ACanvas: TCanvas);
+var
+  selectrect: TRect;
 begin
   inherited Draw(ACanvas);
   ACanvas.Rectangle(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)));
+  if IsSelected then begin
+  ACanvas.Brush.Style:=bsClear;
+  ACanvas.Pen.Style:=psDashDotDot;
+  selectrect:=ToRect(objTransform.W2S(DPRect.Top),
+    objTransform.W2S(DPRect.Bottom));
+  ACanvas.Rectangle(selectrect.TopLeft.x-2,selectrect.TopLeft.y-2,
+                    selectrect.BottomRight.x+2,selectrect.BottomRight.y+2);
+  end;
 end;
 
 { TRoundRect }
@@ -215,10 +237,20 @@ begin
 end;
 
 procedure TRoundRect.Draw(ACanvas: TCanvas);
+var
+  selectrect: TRect;
 begin
   inherited Draw(ACanvas);
   ACanvas.RoundRect(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)), Flexure, Flexure);
+  if IsSelected then begin;
+  ACanvas.Brush.Style:=bsClear;
+  ACanvas.Pen.Style:=psDashDotDot;
+  selectrect:=ToRect(objTransform.W2S(DPRect.Top),
+    objTransform.W2S(DPRect.Bottom));
+  ACanvas.Rectangle(selectrect.TopLeft.x-2,selectrect.TopLeft.y-2,
+                    selectrect.BottomRight.x+2,selectrect.BottomRight.y+2);
+  end;
 end;
 
 { TEllipse }
@@ -229,22 +261,25 @@ begin
 end;
 
 procedure TEllipse.Draw(ACanvas: TCanvas);
+var
+  selectrect: TRect;
 begin
   inherited Draw(ACanvas);
   ACanvas.Ellipse(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)));
+  if IsSelected then begin;
+  ACanvas.Brush.Style:=bsClear;
+  ACanvas.Pen.Style:=psDashDotDot;
+  ACanvas.Pen.Width:=CurrentStyles.LineWidth+5;
+  selectrect:=ToRect(objTransform.W2S(DPRect.Top),
+    objTransform.W2S(DPRect.Bottom));
+  ACanvas.Ellipse(selectrect.TopLeft.x-2,selectrect.TopLeft.y-2,
+                    selectrect.BottomRight.x+2,selectrect.BottomRight.y+2);
+  end;
 end;
 
 procedure TEllipse.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
-var
-  A, B, FCoor, SCoor: real;
 begin
-  {A := (FSAPoint.X - FFAPoint.X) / 2;
-  B := (FSAPoint.Y - FFAPoint.Y) / 2;
-  FCoor := (FApoint.X - FFAPoint.X - A) / A;
-  SCoor := (FApoint.Y - FFAPoint.Y - B) / B;
-  if FCoor * FCoor + SCoor * SCoor <= 1 then
-    IsSelected := True;}
   inherited selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint);
 end;
 

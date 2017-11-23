@@ -58,7 +58,6 @@ type
     procedure ScrolCalc;
     procedure VerticalScrollScroll(Sender: TObject; ScrollCode: TScrollCode;
       var ScrollPos: integer);
-    //procedure DrawDelRect;
   private
     { private declarations }
   public
@@ -180,7 +179,7 @@ begin
       MinDACoor := MinPoint(FigureItems[i].MinCoor, MinDACoor);
     end;
       FigureItems[i].Draw(DrawArea.Canvas);
-      if FigureItems[i].IsSelected then ShowMessage('There are selection!');
+      //if FigureItems[i].IsSelected then ShowMessage('There are/is a selection!');
   end;
   if (Delete) then begin
        FreeAndNil(FigureItems[High(FigureItems)]);
