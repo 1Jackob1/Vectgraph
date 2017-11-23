@@ -314,10 +314,30 @@ begin
 end;
 
 procedure TToolSelection.MouseUp(APoint: TPoint);
+var
+  i: Integer;
+  tmpPoint: TPoint;
 begin
-   selecting(SelectPoint,EndSelPoint, TPersistent(FigureItems));
-   Delete:=True;
+  if((SelectPoint.X - EndSelPoint.X)*(SelectPoint.Y - EndSelPoint.Y) <= 5) then
+  begin
+      EndSelPoint.X:=SelectPoint.X+5;
+      EndSelPoint.Y:=SelectPoint.Y+5;
+    end;
+  if (SelectPoint.X<EndSelPoint.X) and (SelectPoint.Y<EndSelPoint.Y) then begin
+      tmpPoint:=SelectPoint;
+      SelectPoint:=EndSelPoint;
+      EndSelPoint:=tmpPoint;
+  end;
 
+  for i:=0 to Length(FigureItems)-2 do begin
+    if (FigureItems[i].ClassName<>'TPolyLine') or (Length(FigureItems[i].vert)<3) then
+    FigureItems[i].selectfig(SelectPoint,EndSelPoint,
+    objTransform.W2S(FigureItems[i].MaxCoor),objTransform.W2S(FigureItems[i].MinCoor))
+    else
+     FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert)
+  end;
+
+   Delete:=True;
 end;
 
  { TToolReg }

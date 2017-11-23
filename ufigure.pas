@@ -15,20 +15,24 @@ type
   private
     LineColor: TColor;
     FillColor: TColor;
-    LineType : TFPPenStyle;
-    FillType : TFPBrushStyle;
-    LineWidth: Integer;
+    LineType: TFPPenStyle;
+    FillType: TFPBrushStyle;
+    LineWidth: integer;
   public
     MaxCoor, MinCoor: TDoublePoint;
+    vert: array of TDoublePoint;
+    IsSelected: boolean;
     procedure MouseMove(ADPoint: TDoublePoint); virtual; abstract;
     procedure NextPoint(ADPoint: TDoublePoint); virtual; abstract;
-    procedure MouseUp(ADPoint: TDoublePoint);   virtual;
-    procedure Draw(ACanvas: TCanvas);           virtual; abstract;
+    procedure MouseUp(ADPoint: TDoublePoint); virtual;
+    procedure Draw(ACanvas: TCanvas); virtual; abstract;
     procedure SetDefFigrStyles;
-
-    property FLineWidth: Integer    read LineWidth write LineWidth;
-    property FLineColor: TColor     read LineColor write LineColor;
-    property FLineType: TFPPenStyle read LineType  write LineType;
+    procedure selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint); virtual;
+    procedure selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoublePoint);
+      virtual; abstract;
+    property FLineWidth: integer read LineWidth write LineWidth;
+    property FLineColor: TColor read LineColor write LineColor;
+    property FLineType: TFPPenStyle read LineType write LineType;
 
   end;
 
@@ -36,17 +40,17 @@ type
 
   TSmlrRect = class(TFigure)
   private
-    DPRect    : TDRect;
-    RFillType : TFPBrushStyle;
+    DPRect: TDRect;
+    RFillType: TFPBrushStyle;
     RFillColor: TColor;
   public
     procedure NextPoint(ADPoint: TDoublePoint); override;
-    procedure MouseUp(ADPoint: TDoublePoint);   override;
-    procedure Draw(ACanvas: TCanvas);           override;
-
-    property FFillColor: TColor        read RFillColor write RFillColor;
-    property FFillType:  TFPBrushStyle read RFillType  write RFillType;
-    property FLineColor: TColor        read LineColor  write LineColor;
+    procedure MouseUp(ADPoint: TDoublePoint); override;
+    procedure Draw(ACanvas: TCanvas); override;
+    procedure selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint); override;
+    property FFillColor: TColor read RFillColor write RFillColor;
+    property FFillType: TFPBrushStyle read RFillType write RFillType;
+    property FLineColor: TColor read LineColor write LineColor;
 
   end;
 
@@ -57,11 +61,11 @@ type
     constructor Create;
     procedure Draw(ACanvas: TCanvas); override;
   published
-    property FLineType:  TFPPenStyle   read LineType   write LineType;
-    property FFillType:  TFPBrushStyle read RFillType  write RFillType;
-    property FLineWidth: Integer       read LineWidth  write LineWidth;
-    property FLineColor: TColor        read LineColor  write LineColor;
-    property FFillColor: TColor        read RFillColor write RFillColor;
+    property FLineType: TFPPenStyle read LineType write LineType;
+    property FFillType: TFPBrushStyle read RFillType write RFillType;
+    property FLineWidth: integer read LineWidth write LineWidth;
+    property FLineColor: TColor read LineColor write LineColor;
+    property FFillColor: TColor read RFillColor write RFillColor;
 
   end;
 
@@ -69,17 +73,17 @@ type
 
   TRoundRect = class(TSmlrRect)
   private
-    Flexure: Integer;
+    Flexure: integer;
   public
     constructor Create;
     procedure Draw(ACanvas: TCanvas); override;
   published
-    property FLineType:  TFPPenStyle   read LineType  write LineType;
-    property FFillType:  TFPBrushStyle read RFillType write RFillType;
-    property FFlexure:   Integer       read Flexure   write Flexure;
-    property FLineWidth: Integer       read LineWidth write LineWidth;
-    property FLineColor: TColor        read LineColor write LineColor;
-    property FFillColor: TColor        read FillColor write FillColor;
+    property FLineType: TFPPenStyle read LineType write LineType;
+    property FFillType: TFPBrushStyle read RFillType write RFillType;
+    property FFlexure: integer read Flexure write Flexure;
+    property FLineWidth: integer read LineWidth write LineWidth;
+    property FLineColor: TColor read LineColor write LineColor;
+    property FFillColor: TColor read FillColor write FillColor;
 
   end;
 
@@ -89,12 +93,13 @@ type
   public
     constructor Create;
     procedure Draw(ACanvas: TCanvas); override;
+    procedure selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint); override;
   published
-    property FLineType:  TFPPenStyle   read LineType   write LineType;
-    property FFillType:  TFPBrushStyle read RFillType  write RFillType;
-    property FLineWidth: Integer       read LineWidth  write LineWidth;
-    property FLineColor: TColor        read LineColor  write LineColor;
-    property FFillColor: TColor        read RFillColor write RFillColor;
+    property FLineType: TFPPenStyle read LineType write LineType;
+    property FFillType: TFPBrushStyle read RFillType write RFillType;
+    property FLineWidth: integer read LineWidth write LineWidth;
+    property FLineColor: TColor read LineColor write LineColor;
+    property FFillColor: TColor read RFillColor write RFillColor;
 
   end;
 
@@ -102,15 +107,16 @@ type
 
   TPolyLine = class(TFigure)
   public
-    vert: array of TDoublePoint;
     constructor Create;
     procedure NextPoint(ADPoint: TDoublePoint); override;
     procedure MouseUp(ADPoint: TDoublePoint); override;
     procedure Draw(ACanvas: TCanvas); override;
+    procedure selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoublePoint);
+      override;
     procedure NextLine(ADPoint: TDoublePoint);
   published
     property FLineType: TFPPenStyle read LineType write LineType;
-    property FLineWidth: Integer read LineWidth write LineWidth;
+    property FLineWidth: integer read LineWidth write LineWidth;
     property FLineColor: TColor read LineColor write LineColor;
 
   end;
@@ -125,6 +131,7 @@ type
 var
   CurrentStyles: Styles;
   SelectPoint, EndSelPoint: TPoint;
+
 implementation
 
 procedure TFigure.MouseUp(ADPoint: TDoublePoint);
@@ -136,8 +143,22 @@ begin
   LineWidth := CurrentStyles.LineWidth;
   LineColor := CurrentStyles.LineColor;
   FillColor := CurrentStyles.FillColor;
-  LineType  := CurrentStyles.LineStyle;
-  FillType  := CurrentStyles.FillStyle;
+  LineType := CurrentStyles.LineStyle;
+  FillType := CurrentStyles.FillStyle;
+  IsSelected := False;
+end;
+
+procedure TFigure.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
+var
+  cond1, cond2, cond3, cond4, cond5: boolean;
+begin
+  cond1 := ((FAPoint <= FFAPoint) or (FAPoint >= FFAPoint));
+  cond2 := ((SAPoint <= FSAPoint) or (SAPoint >= FSAPoint));
+  cond3 := (SAPoint <= FFAPoint);
+  cond4 := ((FAPoint.X >= FFAPoint.X) and (SAPoint.X <= FFAPoint.X));
+  cond5 := ((FAPoint.Y >= FFAPoint.Y) and (SAPoint.Y <= FFAPoint.Y));
+  if (cond1 and cond2 and cond3) or cond4 or cond5 then
+    IsSelected := True;
 end;
 
 { TSmlrRect }
@@ -156,14 +177,19 @@ procedure TSmlrRect.Draw(ACanvas: TCanvas);
 begin
   with ACanvas do
   begin
-    Pen.Width   := LineWidth;
-    Pen.Style   := LineType;
+    Pen.Width := LineWidth;
+    Pen.Style := LineType;
     Brush.Style := FillType;
-    Pen.Color   := LineColor;
+    Pen.Color := LineColor;
     Brush.Color := FillColor;
-    MaxCoor     := MaxPoint(DPRect.Top, DPRect.Bottom);
-    MinCoor     := MinPoint(DPRect.Top, DPRect.Bottom);
+    MaxCoor := MaxPoint(DPRect.Top, DPRect.Bottom);
+    MinCoor := MinPoint(DPRect.Top, DPRect.Bottom);
   end;
+end;
+
+procedure TSmlrRect.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
+begin
+  inherited selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint);
 end;
 
 { TRectangle }
@@ -209,13 +235,25 @@ begin
     objTransform.W2S(DPRect.Bottom)));
 end;
 
+procedure TEllipse.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
+var
+  A, B, FCoor, SCoor: real;
+begin
+  {A := (FSAPoint.X - FFAPoint.X) / 2;
+  B := (FSAPoint.Y - FFAPoint.Y) / 2;
+  FCoor := (FApoint.X - FFAPoint.X - A) / A;
+  SCoor := (FApoint.Y - FFAPoint.Y - B) / B;
+  if FCoor * FCoor + SCoor * SCoor <= 1 then
+    IsSelected := True;}
+  inherited selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint);
+end;
 
 { TPolyLine }
 
 constructor TPolyLine.Create;
 begin
   LineWidth := CurrentStyles.LineWidth;
-  LineType  := CurrentStyles.LineStyle;
+  LineType := CurrentStyles.LineStyle;
   LineColor := CurrentStyles.LineColor;
 end;
 
@@ -228,7 +266,7 @@ end;
 
 procedure TPolyLine.Draw(ACanvas: TCanvas);
 var
-  i: Integer;
+  i: integer;
 begin
   MaxCoor := ToDP(0, 0);
   MinCoor := ToDP(0, 0);
@@ -256,19 +294,33 @@ begin
   Vert[High(Vert)] := ADPoint;
 end;
 
- {TSpecialRect}
- constructor TSpecialRect.Create;
- begin
+procedure TPolyLine.selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoublePoint);
+var
+  i: integer;
+  tmp: TDoublePoint;
+begin
+    for i := 0 to Length(AVert) - 1 do
+    begin
+      if (objTransform.W2S(AVert[i]) <= FAPoint) and
+        (objTransform.W2S(AVert[i]) >= SAPoint) and (not IsSelected) then
+        IsSelected := True;
+    end;
 
- end;
+end;
 
- procedure TSpecialRect.Draw(ACanvas: TCanvas);
- begin
-   ACanvas.Pen.Style:=psSolid;
-   ACanvas.Pen.Color:=clBlack;
-   ACanvas.Brush.Style:=bsClear;
-   ACanvas.Rectangle(SelectPoint.X,SelectPoint.Y,EndSelPoint.X,EndSelPoint.Y);
- end;
+{TSpecialRect}
+constructor TSpecialRect.Create;
+begin
+
+end;
+
+procedure TSpecialRect.Draw(ACanvas: TCanvas);
+begin
+  ACanvas.Pen.Style := psSolid;
+  ACanvas.Pen.Color := clBlack;
+  ACanvas.Brush.Style := bsClear;
+  ACanvas.Rectangle(SelectPoint.X, SelectPoint.Y, EndSelPoint.X, EndSelPoint.Y);
+end;
 
 initialization
 

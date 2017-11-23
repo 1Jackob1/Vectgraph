@@ -113,9 +113,12 @@ end;
 
 procedure TVectGraph.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
+var i:integer;
 begin
   if Button = mbLeft then
   begin
+    for i:=0 to Length(FigureItems)-1 do
+      FigureItems[i].IsSelected:=false;
     SetLength(History, 0);
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
@@ -177,6 +180,7 @@ begin
       MinDACoor := MinPoint(FigureItems[i].MinCoor, MinDACoor);
     end;
       FigureItems[i].Draw(DrawArea.Canvas);
+      if FigureItems[i].IsSelected then ShowMessage('There are selection!');
   end;
   if (Delete) then begin
        FreeAndNil(FigureItems[High(FigureItems)]);
