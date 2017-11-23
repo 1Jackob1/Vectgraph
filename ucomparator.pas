@@ -20,9 +20,10 @@ type
   function ToRect(ADPoint: TDRect): TRect;
   function MaxPoint(FirstDPoint, SecondDPoint: TDoublePoint): TDoublePoint;
   function MinPoint(FirstDPoint, SecondDPoint: TDoublePoint): TDoublePoint;
+  operator >=(AFPoint, ASPoint: TPoint): boolean;
+  operator <=(AFPoint, ASPoint: TPoint): boolean;
 
 implementation
-
   function ToDP(X, Y: Real): TDoublePoint;
   begin
     Result.X := X;
@@ -65,6 +66,16 @@ implementation
   begin
     Result.X:=min(FirstDPoint.X,SecondDPoint.X);
     Result.Y:=min(FirstDPoint.Y,SecondDPoint.Y);
+  end;
+
+  operator>=(AFPoint, ASPoint: TPoint): boolean;
+  begin
+    Result:= (AFPoint.X>=ASPoint.X) and (AFPoint.Y>=ASPoint.Y);
+  end;
+
+  operator<=(AFPoint, ASPoint: TPoint): boolean;
+  begin
+    Result:= (AFPoint.X<=ASPoint.X) and (AFPoint.Y<=ASPoint.Y);
   end;
 
 end.
