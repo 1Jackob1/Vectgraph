@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, UTool,
+  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, FPCanvas, UTool,
   UTransform, UComparator, UDefine, UCreateAttributes;
 
 type
@@ -58,6 +58,7 @@ type
     procedure ScrolCalc;
     procedure VerticalScrollScroll(Sender: TObject; ScrollCode: TScrollCode;
       var ScrollPos: integer);
+    //procedure DrawDelRect;
   private
     { private declarations }
   public
@@ -175,10 +176,17 @@ begin
       MaxDACoor := MaxPoint(FigureItems[i].MaxCoor, MaxDACoor);
       MinDACoor := MinPoint(FigureItems[i].MinCoor, MinDACoor);
     end;
-    FigureItems[i].Draw(DrawArea.Canvas);
+      FigureItems[i].Draw(DrawArea.Canvas);
   end;
+  if (Delete) then begin
+       FreeAndNil(FigureItems[High(FigureItems)]);
+       SetLength(FigureItems, Length(FigureItems) - 1);
+       Delete:=False;
+       DrawArea.Invalidate;
+      end;
   ScrolCalc;
 end;
+
 
 procedure TVectGraph.EditionsClsClick(Sender: TObject);
 var
@@ -192,9 +200,6 @@ begin
   SetLength(History,0);
   ScrolCalc;
   DrawArea.Invalidate;
-  //EditionsShowAllClick(Sender);
-  //objTransform.Zoom:=MIN_ZOOM;
-  //ScaleSpin.Value:=objTransform.Zoom;
 
 end;
 

@@ -20,7 +20,6 @@ type
     LineWidth: Integer;
   public
     MaxCoor, MinCoor: TDoublePoint;
-
     procedure MouseMove(ADPoint: TDoublePoint); virtual; abstract;
     procedure NextPoint(ADPoint: TDoublePoint); virtual; abstract;
     procedure MouseUp(ADPoint: TDoublePoint);   virtual;
@@ -116,9 +115,16 @@ type
 
   end;
 
+  { TSpecialRect }
+
+  TSpecialRect = class(TFigure)
+    constructor Create;
+    procedure Draw(ACanvas: TCanvas); override;
+  end;
+
 var
   CurrentStyles: Styles;
-
+  SelectPoint, EndSelPoint: TPoint;
 implementation
 
 procedure TFigure.MouseUp(ADPoint: TDoublePoint);
@@ -249,6 +255,20 @@ begin
   SetLength(Vert, Length(Vert) + 1);
   Vert[High(Vert)] := ADPoint;
 end;
+
+ {TSpecialRect}
+ constructor TSpecialRect.Create;
+ begin
+
+ end;
+
+ procedure TSpecialRect.Draw(ACanvas: TCanvas);
+ begin
+   ACanvas.Pen.Style:=psSolid;
+   ACanvas.Pen.Color:=clBlack;
+   ACanvas.Brush.Style:=bsClear;
+   ACanvas.Rectangle(SelectPoint.X,SelectPoint.Y,EndSelPoint.X,EndSelPoint.Y);
+ end;
 
 initialization
 

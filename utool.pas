@@ -5,7 +5,7 @@ unit UTool;
 interface
 
 uses
-  Classes, SysUtils, Graphics, UFigure, UDefine, UTransform, UComparator,
+  Classes, SysUtils, Graphics, FPCanvas, UFigure, UDefine, UTransform, UComparator,
   UCreateAttributes;
 
 type
@@ -98,10 +98,20 @@ type
       procedure MouseMove(APoint: TPoint);   override;
       procedure MouseDown(APoint: TPoint);   override;
     end;
+
+  {TToolSelection}
+
+  TToolSelection = class(TTool)
+    procedure MouseMove(APoint: TPoint);     override;
+    procedure MouseDown(APoint: TPoint);     override;
+    procedure MouseUp(  APoint: TPoint);     override;
+  end;
+
  var
     ToolConst: TToolReg;
     tmpDP: TDoublePoint;
     FigureItems, History: array of TFigure;
+    Delete: Boolean;
 implementation
 
 { TTool }
@@ -287,6 +297,29 @@ begin
   tmpDP := ToDP(APoint);
 end;
 
+ { TToolSelection }
+
+procedure TToolSelection.MouseDown(APoint: TPoint);
+begin
+   Delete:=False;
+   SetLength(FigureItems,Length(FigureItems)+1);
+   FigureItems[High(FigureItems)] := TSpecialRect.Create;
+   SelectPoint:=APoint;
+end;
+
+procedure TToolSelection.MouseMove(APoint: TPoint);
+begin
+   EndSelPoint:=APoint;
+
+end;
+
+procedure TToolSelection.MouseUp(APoint: TPoint);
+begin
+   selecting(SelectPoint,EndSelPoint, TPersistent(FigureItems));
+   Delete:=True;
+
+end;
+
  { TToolReg }
 
 procedure TToolReg.ToolReg(ATToolClass: TToolClass);
@@ -305,6 +338,7 @@ initialization
   ToolConst.ToolReg(TToolEllipse);
   ToolConst.ToolReg(TToolHand);
   ToolConst.ToolReg(TToolLoupe);
+  ToolConst.ToolReg(TToolSelection);
 
 
 end.
