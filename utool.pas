@@ -112,6 +112,8 @@ type
     tmpDP: TDoublePoint;
     FigureItems, History: array of TFigure;
     Delete: Boolean;
+    tmpSwap: TFigure;
+    SelectedCount: Integer;
 implementation
 
 { TTool }
@@ -318,11 +320,7 @@ var
   i: Integer;
   tmpPoint: TPoint;
 begin
-  {if((SelectPoint.X - EndSelPoint.X)*(SelectPoint.Y - EndSelPoint.Y) <= 5) then
-  begin
-      EndSelPoint.X:=SelectPoint.X+5;
-      EndSelPoint.Y:=SelectPoint.Y+5;
-    end; }
+   SelectedCount:=0;
   if (SelectPoint.X<EndSelPoint.X) and (SelectPoint.Y<EndSelPoint.Y) then begin
       tmpPoint:=SelectPoint;
       SelectPoint:=EndSelPoint;
@@ -334,7 +332,9 @@ begin
     FigureItems[i].selectfig(SelectPoint,EndSelPoint,
     objTransform.W2S(FigureItems[i].MaxCoor),objTransform.W2S(FigureItems[i].MinCoor))
     else
-     FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert)
+     FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert);
+    if FigureItems[i].IsSelected then
+      SelectedCount+=1;
   end;
 
    Delete:=True;

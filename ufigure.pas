@@ -5,7 +5,7 @@ unit UFigure;
 interface
 
 uses
-  Classes, SysUtils, Graphics, FPCanvas, UTransform, UDefine, UComparator;
+  Classes, SysUtils, Graphics, FPCanvas, Types, UTransform, UDefine, UComparator;
 
 type
 
@@ -153,8 +153,8 @@ var
   cond1, cond2, cond3, cond4, cond5: boolean;
   R1,R2:TRect;
 begin
-  R2:=TRect.Create(FSAPoint,FFAPoint);
-  R1:=TRect.Create(SAPoint,FAPoint);
+  R2:=ToRect(FSAPoint,FFAPoint);
+  R1:=ToRect(SAPoint,FAPoint);
   cond1 := ((R1.Top>=R2.Top) and (R1.Top<=R2.Bottom)) or
            ((R1.Bottom>=R2.Top) and (R1.Bottom<=R2.Bottom));
 
@@ -168,7 +168,8 @@ begin
 
   cond5 := ((R1.Left<R2.Left) and (R1.Right<R2.Left)) or
            ((R1.Left>R2.Right) and (R1.Right>R2.Right));
-
+  //if (FSAPoint.X = 0) and (FSAPoint.Y = 0) then
+  //  cond4:=True;
   if (cond1 or cond2 or cond3) and not cond4 and not cond5 then
     IsSelected := True;
 end;
@@ -305,7 +306,7 @@ var
   FPoint,SPoint:TPoint;
 begin
   MaxCoor := ToDP(0, 0);
-  MinCoor := ToDP(0, 0);
+  MinCoor := vert[0];
   ACanvas.Pen.Color := LineColor;
   ACanvas.Pen.Width := LineWidth;
   ACanvas.Pen.Style := LineType;

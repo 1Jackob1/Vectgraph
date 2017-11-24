@@ -27,6 +27,9 @@ type
     EditionsUnDo: TMenuItem;
     EditionsReDo: TMenuItem;
     EditionsCls: TMenuItem;
+    EditionsReplaseUp: TMenuItem;
+    EditionsReplaseDown: TMenuItem;
+    EditionsDel: TMenuItem;
     ScaleSpin: TFloatSpinEdit;
     HorizontalScroll: TScrollBar;
     VerticalScroll: TScrollBar;
@@ -44,7 +47,10 @@ type
       Shift: TShiftState; X, Y: integer);
     procedure DrawAreaPaint(Sender: TObject);
     procedure EditionsClsClick(Sender: TObject);
+    procedure EditionsDelClick(Sender: TObject);
     procedure EditionsReDoClick(Sender: TObject);
+    procedure EditionsReplaseDownClick(Sender: TObject);
+    procedure EditionsReplaseUpClick(Sender: TObject);
     procedure EditionsShowAllClick(Sender: TObject);
     procedure EditionsUnDoClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -110,19 +116,6 @@ begin
 
 end;
 
-procedure TVectGraph.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: integer);
-var i:integer;
-begin
-  if Button = mbLeft then
-  begin
-    for i:=0 to Length(FigureItems)-1 do
-      FigureItems[i].IsSelected:=false;
-    SetLength(History, 0);
-    IsDrawing := True;
-    ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
-  end;
-end;
 
 procedure TVectGraph.ActionUnDoExecute(Sender: TObject);
 begin
@@ -140,6 +133,21 @@ begin
 end;
 
  { MouseDown/Move/Up }
+
+ procedure TVectGraph.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: integer);
+var i:integer;
+begin
+  if Button = mbLeft then
+  begin
+    for i:=0 to Length(FigureItems)-1 do
+      FigureItems[i].IsSelected:=false;
+    SetLength(History, 0);
+    IsDrawing := True;
+    ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
+  end;
+end;
+
 procedure TVectGraph.DrawAreaMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: integer);
 begin
@@ -179,7 +187,6 @@ begin
       MinDACoor := MinPoint(FigureItems[i].MinCoor, MinDACoor);
     end;
       FigureItems[i].Draw(DrawArea.Canvas);
-      //if FigureItems[i].IsSelected then ShowMessage('There are/is a selection!');
   end;
   if (Delete) then begin
        FreeAndNil(FigureItems[High(FigureItems)]);
@@ -206,7 +213,32 @@ begin
 
 end;
 
-{ Un/ReDo }
+procedure TVectGraph.EditionsDelClick(Sender: TObject);
+var
+  i,j,k: Integer;
+begin
+  for k:=0 to SelectedCount do begin
+   for j:=0 to Length(FigureItems)-1 do begin
+     i:=j;
+       if (FigureItems[j]<>nil) and FigureItems[j].IsSelected then begin
+        FreeAndNil(FigureItems[j]);
+          while i<Length(FigureItems)-1 do begin
+            tmpSwap:=FigureItems[i];
+            FigureItems[i]:=FigureItems[i+1];
+            FigureItems[i+1]:=tmpSwap;
+            i+=1;
+          end;
+       end;
+       DrawArea.Invalidate;
+   end;
+   end;
+
+   SetLength(FigureItems,Length(FigureItems)-SelectedCount);
+
+
+
+end;
+
 
 procedure TVectGraph.EditionsReDoClick(Sender: TObject);
 begin
@@ -217,6 +249,44 @@ begin
     SetLength(History, Length(History) - 1);
     DrawArea.Invalidate;
   end;
+end;
+
+procedure TVectGraph.EditionsReplaseDownClick(Sender: TObject);
+var
+  i,j: Integer;
+begin
+
+   for j:=Length(FigureItems)-1 downto 0 do begin
+     i:=j;
+       if FigureItems[j].IsSelected then
+          while i>0 do begin
+            tmpSwap:=FigureItems[i];
+            FigureItems[i]:=FigureItems[i-1];
+            FigureItems[i-1]:=tmpSwap;
+            i-=1;
+          end;
+       DrawArea.Invalidate;
+   end;
+
+end;
+
+procedure TVectGraph.EditionsReplaseUpClick(Sender: TObject);
+var
+  i,j: Integer;
+begin
+
+   for j:=0 to Length(FigureItems)-1 do begin
+     i:=j;
+       if FigureItems[j].IsSelected then
+          while i<Length(FigureItems)-1 do begin
+            tmpSwap:=FigureItems[i];
+            FigureItems[i]:=FigureItems[i+1];
+            FigureItems[i+1]:=tmpSwap;
+            i+=1;
+          end;
+       DrawArea.Invalidate;
+   end;
+
 end;
 
 procedure TVectGraph.EditionsUnDoClick(Sender: TObject);
