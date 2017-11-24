@@ -150,27 +150,16 @@ end;
 
 procedure TFigure.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
 var
-  cond1, cond2, cond3, cond4, cond5: boolean;
+  cond1, cond2: boolean;
   R1,R2:TRect;
 begin
   R2:=ToRect(FSAPoint,FFAPoint);
   R1:=ToRect(SAPoint,FAPoint);
-  cond1 := ((R1.Top>=R2.Top) and (R1.Top<=R2.Bottom)) or
-           ((R1.Bottom>=R2.Top) and (R1.Bottom<=R2.Bottom));
+  cond1 := ((R1.Top<=R2.Top) and (R1.Bottom>=R2.Bottom));
 
-  cond2 := ((R1.Left<=R2.Left) and (R1.Left>=R2.Right)) or
-           ((R1.Right>=R2.Left) and (R1.Right<=R2.Right));
+  cond2 := ((R1.Left<=R2.Left) and (R1.Right>=R2.Right));
 
-  cond3 := (FAPoint>=FFAPoint) and (SAPoint<=FSAPoint);
-
-  cond4 := ((R1.Top<R2.Top) and (R1.Bottom<R2.Top)) or
-           ((R1.Top>R2.Bottom) and (R1.Bottom>R2.Bottom));
-
-  cond5 := ((R1.Left<R2.Left) and (R1.Right<R2.Left)) or
-           ((R1.Left>R2.Right) and (R1.Right>R2.Right));
-  //if (FSAPoint.X = 0) and (FSAPoint.Y = 0) then
-  //  cond4:=True;
-  if (cond1 or cond2 or cond3) and not cond4 and not cond5 then
+  if cond1 and cond2 then
     IsSelected := True;
 end;
 
