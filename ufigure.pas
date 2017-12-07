@@ -200,6 +200,7 @@ end;
 
 procedure TSmlrRect.Draw(ACanvas: TCanvas);
 begin
+
   SetDefFigrStyles;
   with ACanvas do
   begin
@@ -318,6 +319,7 @@ var
   i: integer;
   FPoint,SPoint:TPoint;
 begin
+  SetDefFigrStyles;
   MaxCoor := ToDP(0, 0);
   MinCoor := vert[0];
   ACanvas.Pen.Color := LineColor;
