@@ -5,7 +5,7 @@ unit UFigure;
 interface
 
 uses
-  Classes, SysUtils, Graphics, FPCanvas, UTransform, UDefine, UComparator;
+  Classes, SysUtils, Graphics, FPCanvas, Types, UTransform, UDefine, UComparator;
 
 type
 
@@ -22,6 +22,7 @@ type
     MaxCoor, MinCoor: TDoublePoint;
     vert: array of TDoublePoint;
     IsSelected: boolean;
+
     procedure MouseMove(ADPoint: TDoublePoint); virtual; abstract;
     procedure NextPoint(ADPoint: TDoublePoint); virtual; abstract;
     procedure MouseUp(ADPoint: TDoublePoint); virtual;
@@ -128,11 +129,22 @@ type
     procedure Draw(ACanvas: TCanvas); override;
   end;
 
+procedure Swap(var A, B: TFigure);
+
 var
   CurrentStyles: Styles;
   SelectPoint, EndSelPoint: TPoint;
 
 implementation
+
+procedure Swap(var A, B: TFigure);
+var
+  t: TFigure;
+begin
+  t := A;
+  A := B;
+  B := t;
+end;
 
 procedure TFigure.MouseUp(ADPoint: TDoublePoint);
 begin
@@ -150,17 +162,21 @@ end;
 
 procedure TFigure.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
 var
-  cond1, cond2, cond3, cond4, cond5: boolean;
+  cond1, cond2: boolean;
   R1,R2:TRect;
 begin
-  R2:=TRect.Create(FSAPoint,FFAPoint);
-  R1:=TRect.Create(SAPoint,FAPoint);
+  R2:=ToRect(FSAPoint,FFAPoint);
+  R1:=ToRect(SAPoint,FAPoint);
+<<<<<<< HEAD
   cond1 := ((R1.Top>=R2.Top) and (R1.Top<=R2.Bottom)) or
            ((R1.Bottom>=R2.Top) and (R1.Bottom<=R2.Bottom));
+=======
+  cond1 := ((R1.Top<=R2.Top) and (R1.Bottom>=R2.Bottom));
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 
-  cond2 := ((R1.Left<=R2.Left) and (R1.Left>=R2.Right)) or
-           ((R1.Right>=R2.Left) and (R1.Right<=R2.Right));
+  cond2 := ((R1.Left<=R2.Left) and (R1.Right>=R2.Right));
 
+<<<<<<< HEAD
   cond3 := (FAPoint>=FFAPoint) and (SAPoint<=FSAPoint);
 
   cond4 := ((R1.Top<R2.Top) and (R1.Bottom<R2.Top)) or
@@ -168,8 +184,12 @@ begin
 
   cond5 := ((R1.Left<R2.Left) and (R1.Right<R2.Left)) or
            ((R1.Left>R2.Right) and (R1.Right>R2.Right));
-
+  //if (FSAPoint.X = 0) and (FSAPoint.Y = 0) then
+  //  cond4:=True;
   if (cond1 or cond2 or cond3) and not cond4 and not cond5 then
+=======
+  if cond1 and cond2 then
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
     IsSelected := True;
 end;
 
@@ -187,6 +207,7 @@ end;
 
 procedure TSmlrRect.Draw(ACanvas: TCanvas);
 begin
+  SetDefFigrStyles;
   with ACanvas do
   begin
     Pen.Width := LineWidth;
@@ -219,12 +240,12 @@ begin
   ACanvas.Rectangle(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)));
   if IsSelected then begin
-  ACanvas.Brush.Style:=bsClear;
-  ACanvas.Pen.Style:=psDashDotDot;
-  selectrect:=ToRect(objTransform.W2S(DPRect.Top),
-    objTransform.W2S(DPRect.Bottom));
-  ACanvas.Rectangle(selectrect.TopLeft.x-2,selectrect.TopLeft.y-2,
-                    selectrect.BottomRight.x+2,selectrect.BottomRight.y+2);
+    ACanvas.Brush.Style:=bsClear;
+    ACanvas.Pen.Style:=psDashDotDot;
+    selectrect:=ToRect(objTransform.W2S(DPRect.Top), objTransform.W2S(DPRect.Bottom));
+    ACanvas.Rectangle(
+      selectrect.TopLeft.x-2,selectrect.TopLeft.y-2,
+      selectrect.BottomRight.x+2,selectrect.BottomRight.y+2);
   end;
 end;
 
@@ -243,13 +264,13 @@ begin
   inherited Draw(ACanvas);
   ACanvas.RoundRect(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)), Flexure, Flexure);
-  if IsSelected then begin;
-  ACanvas.Brush.Style:=bsClear;
-  ACanvas.Pen.Style:=psDashDotDot;
-  selectrect:=ToRect(objTransform.W2S(DPRect.Top),
-    objTransform.W2S(DPRect.Bottom));
-  ACanvas.Rectangle(selectrect.TopLeft.x-2,selectrect.TopLeft.y-2,
-                    selectrect.BottomRight.x+2,selectrect.BottomRight.y+2);
+  if IsSelected then begin
+    ACanvas.Brush.Style:=bsClear;
+    ACanvas.Pen.Style:=psDashDotDot;
+    selectrect:=ToRect(objTransform.W2S(DPRect.Top),
+      objTransform.W2S(DPRect.Bottom));
+    ACanvas.Rectangle(selectrect.TopLeft.x-2,selectrect.TopLeft.y-2,
+                      selectrect.BottomRight.x+2,selectrect.BottomRight.y+2);
   end;
 end;
 
@@ -305,7 +326,7 @@ var
   FPoint,SPoint:TPoint;
 begin
   MaxCoor := ToDP(0, 0);
-  MinCoor := ToDP(0, 0);
+  MinCoor := vert[0];
   ACanvas.Pen.Color := LineColor;
   ACanvas.Pen.Width := LineWidth;
   ACanvas.Pen.Style := LineType;
@@ -365,6 +386,8 @@ begin
   ACanvas.Brush.Style := bsClear;
   ACanvas.Rectangle(SelectPoint.X, SelectPoint.Y, EndSelPoint.X, EndSelPoint.Y);
 end;
+
+
 
 initialization
 

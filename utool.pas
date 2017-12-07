@@ -112,8 +112,10 @@ type
     tmpDP: TDoublePoint;
     FigureItems, History: array of TFigure;
     Delete: Boolean;
+    tmpSwap: TFigure;
+    SelectedCount: Integer;
 implementation
-
+  Uses UDRaw;
 { TTool }
  procedure TTool.MouseUp(APoint: TPoint);
  begin
@@ -181,7 +183,6 @@ end;
  begin
      inherited MouseUp(APoint);
  end;
-
 
  { TToolRectangle }
 
@@ -318,25 +319,33 @@ var
   i: Integer;
   tmpPoint: TPoint;
 begin
-  {if((SelectPoint.X - EndSelPoint.X)*(SelectPoint.Y - EndSelPoint.Y) <= 5) then
-  begin
-      EndSelPoint.X:=SelectPoint.X+5;
-      EndSelPoint.Y:=SelectPoint.Y+5;
-    end; }
+<<<<<<< HEAD
+  SelectedCount:=0;
+=======
+   SelectedCount:=0;
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
   if (SelectPoint.X<EndSelPoint.X) and (SelectPoint.Y<EndSelPoint.Y) then begin
-      tmpPoint:=SelectPoint;
-      SelectPoint:=EndSelPoint;
-      EndSelPoint:=tmpPoint;
+    tmpPoint:=SelectPoint;
+    SelectPoint:=EndSelPoint;
+    EndSelPoint:=tmpPoint;
   end;
 
   for i:=0 to Length(FigureItems)-2 do begin
-    if (FigureItems[i].ClassName<>'TPolyLine') or (Length(FigureItems[i].vert)<3) then
-    FigureItems[i].selectfig(SelectPoint,EndSelPoint,
-    objTransform.W2S(FigureItems[i].MaxCoor),objTransform.W2S(FigureItems[i].MinCoor))
+    if (FigureItems[i] is TPolyLine) or (Length(FigureItems[i].vert)<3) then
+      FigureItems[i].selectfig(
+        SelectPoint,EndSelPoint,
+        objTransform.W2S(FigureItems[i].MaxCoor),
+        objTransform.W2S(FigureItems[i].MinCoor))
     else
-     FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert)
+<<<<<<< HEAD
+      FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert);
+=======
+     FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert);
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
+    if FigureItems[i].IsSelected then
+      SelectedCount+=1;
   end;
-
+   EditSelectedFig;
    Delete:=True;
 end;
 
@@ -362,4 +371,3 @@ initialization
 
 
 end.
-

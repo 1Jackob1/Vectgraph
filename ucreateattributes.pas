@@ -15,12 +15,13 @@ type
   TFigureAttr = class
   private
     NameOfAttr: TLabel;
-    Obj:        TPersistent;
-    AboutAttr:  PPropInfo;
+    Objs: array of TPersistent;
+    AboutAttr: PPropInfo;
     procedure OnChange(Sender: TObject); virtual;
   public
-    constructor Create(AObj: TPersistent; AAboutAttr: PPropInfo); virtual;
-    destructor  Destroy; override;
+    constructor Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean); virtual;
+    destructor Destroy; override;
+    procedure ReBuild; virtual; abstract;
 
   end;
 
@@ -28,13 +29,16 @@ type
 
   TEditCreate = class
   private
-    Obj:        TPersistent;
-    EditTools:  array of TFigureAttr;
-    AttrName:   TLabel;
+    Objs: array of TPersistent;
+    EditTools: array of TFigureAttr;
+    AttrName: TLabel;
+    SingleProp: boolean;
   public
     constructor Create; virtual;
-    destructor  Destroy;
-    procedure   SelectAttrs(AObj: TPersistent);
+    destructor Destroy;
+    procedure SelectAttrs(AObj: TPersistent);
+    procedure SelectManyAttrs(AObjs: array of TPersistent);
+    //procedure Rebuild;
     //procedure   Cls;
   end;
 
@@ -45,8 +49,9 @@ type
     LineStyleComboBox: TComboBox;
     procedure OnChange(Sender: TObject); override;
   public
-    constructor Create(AObj: TPersistent; AAboutAttr: PPropInfo); override;
-    destructor  Destroy; override;
+    constructor Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean); override;
+    destructor Destroy; override;
+    procedure ReBuild; override;
   end;
 
   { TBrushStyleEdit }
@@ -56,8 +61,9 @@ type
     BrushStyleComboBox: TComboBox;
     procedure OnChange(Sender: TObject); override;
   public
-    constructor Create(AObj: TPersistent; AAboutAttr: PPropInfo); override;
-    destructor  Destroy; override;
+    constructor Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean); override;
+    destructor Destroy; override;
+    procedure ReBuild; override;
   end;
 
   { TEditSpin }
@@ -65,10 +71,12 @@ type
   TEditSpin = class(TFigureAttr)
   private
     DSpin: TSpinEdit;
+    Changed: Boolean;
     procedure OnChange(Sender: TObject); override;
   public
-    constructor Create(AObj: TPersistent; AAboutAttr: PPropInfo); override;
-    destructor  Destroy; override;
+    constructor Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean); override;
+    destructor Destroy; override;
+    procedure ReBuild; override;
   end;
 
   { TColorEdit }
@@ -77,14 +85,17 @@ type
     ColorBttn: TColorButton;
     procedure OnChange(Sender: TObject); override;
   public
-    constructor Create(AObj: TPersistent; AAboutAttr: PPropInfo); override;
-    destructor  Destroy; override;
+    constructor Create(AObjs:array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean); override;
+    destructor Destroy; override;
+    //procedure ReBuild; override;
   end;
+
+
 
   FigureAttrClass = class of TFigureAttr;
 
   RecAttr = record
-    Item:     FigureAttrClass;
+    Item: FigureAttrClass;
     ItemName: ShortString;
   end;
   ArrRecAttr = array of RecAttr;
@@ -96,33 +107,38 @@ type
     ArrAttr: array of RecAttr;
   public
     procedure RegTool(AItemName: ShortString; AAttr: FigureAttrClass);
-    property  EditTool: ArrRecAttr read ArrAttr;
+    property EditTool: ArrRecAttr read ArrAttr;
 
   end;
 
 var
-  AttrNames:           TStringList;
-  AttrValues:          TStringList;
-  EditToolsContainer:  TRegEditTools;
-  EditFigure:          TEditCreate;
+  AttrNames: TStringList;
+  AttrValues: TStringList;
+  EditToolsContainer: TRegEditTools;
+  EditFigure: TEditCreate;
 
 implementation
 
 uses Umain;
 
+
 { TFigureAttr }
 
-constructor TFigureAttr.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
+constructor TFigureAttr.Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean);
+var
+  i: Integer;
 begin
-  AboutAttr          := AAboutAttr;
-  NameOfAttr         := TLabel.Create(nil);
-  NameOfAttr.Parent  := VectGraph.AttributesBar;
+  SetLength(Objs,Length(AObjs));
+  for i:=0 to High(AObjs) do
+    Objs[i]:=AObjs[i];
+  AboutAttr := AAboutAttr;
+  NameOfAttr := TLabel.Create(nil);
+  NameOfAttr.Parent := VectGraph.AttributesBar;
   NameOfAttr.Caption := Attrnames.Values[AboutAttr^.Name];
-  NameOfAttr.Width   := Round(VectGraph.AttributesBar.Width / 2) - 5;
-  NameOfAttr.Top     := VectGraph.AttributesBar.Tag + 4;
-  NameOfAttr.Left    := 2;
+  NameOfAttr.Width := Round(VectGraph.AttributesBar.Width / 2) - 5;
+  NameOfAttr.Top := VectGraph.AttributesBar.Tag + 4;
+  NameOfAttr.Left := 2;
   VectGraph.AttributesBar.Tag := VectGraph.AttributesBar.Tag + 20;
-  Obj := AObj;
 end;
 
 procedure TFigureAttr.OnChange(Sender: TObject);
@@ -144,25 +160,74 @@ end;
 
 procedure TEditCreate.SelectAttrs(AObj: TPersistent);
 var
-  PropertyList: PPropList;
-  i, j: integer;
+  ArrOfTPer: array of TPersistent;
 begin
-  if Aobj = nil then
-    Exit;
-  obj := AObj;
-  for i := 0 to GetPropList(AObj, PropertyList) - 1 do
+  if AObj <> nil then
   begin
-    for j := 0 to Length(EditToolsContainer.EditTool) - 1 do
-    begin
-      if PropertyList^[i]^.Name = EditToolsContainer.EditTool[j].ItemName then
+    SingleProp := True;
+    SetLength(ArrOfTPer, 1);
+    ArrOfTPer[0] := AObj;
+    SelectManyAttrs(ArrOfTPer);
+  end
+  else
+    exit;
+end;
+
+procedure TEditCreate.SelectManyAttrs(AObjs: array of TPersistent);
+
+  function CheckObj(AObj: TObject; AProp: PPropInfo): boolean;
+  var
+    i, j: integer;
+    PropList: PPropList;
+  begin
+    j := GetPropList(AObj, PropList);
+    Result := False;
+    for i := 0 to j - 1 do
+      if PropList^[i] = AProp then
       begin
-        SetLength(EditTools, Length(EditTools) + 1);
-        EditTools[High(EditTools)] :=
-          EditToolsContainer.EditTool[j].Item.Create(Aobj, PropertyList^[i]);
-        break;
+        Result := True;
+        Exit;
+      end;
+  end;
+
+var
+  PropertyList: PPropList;
+  i, j, k: integer;
+  CrossOut: boolean;
+begin
+  SetLength(Objs, Length(AObjs));
+  if Length(Objs) = 0 then
+    exit
+  else
+  begin
+    for i := 0 to High(AObjs) do
+      Objs[i] := AObjs[i];
+    k := GetPropList(Objs[0], PropertyList);
+    for i := 0 to k - 1 do
+    begin
+      CrossOut := True;
+      for j := 1 to High(Objs) do
+        if not CheckObj(Objs[j], PropertyList^[i]) then
+        begin
+          CrossOut := False;
+          Break;
+        end;
+      if CrossOut then
+      begin
+        for j := 0 to High(EditToolsContainer.EditTool) do
+        begin
+          if PropertyList^[i]^.Name = EditToolsContainer.EditTool[j].ItemName then
+          begin
+            SetLength(EditTools, Length(EditTools) + 1);
+            EditTools[High(EditTools)] :=
+              EditToolsContainer.EditTool[j].Item.Create(Objs, PropertyList^[i], CrossOut);
+            break;
+          end;
+        end;
       end;
     end;
   end;
+  SingleProp:=False;
 end;
 
 destructor TEditCreate.Destroy;
@@ -174,42 +239,46 @@ begin
   SetLength(EditTools, 0);
 end;
 
+
 { TRegEditTools }
 
 procedure TRegEditTools.RegTool(AItemName: ShortString; AAttr: FigureAttrClass);
 begin
   SetLength(ArrAttr, Length(ArrAttr) + 1);
-  ArrAttr[High(ArrAttr)].Item     := AAttr;
+  ArrAttr[High(ArrAttr)].Item := AAttr;
   ArrAttr[High(ArrAttr)].ItemName := AItemName;
 end;
 
 { TLineStyleEdit }
 
-constructor TLineStyleEdit.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
+constructor TLineStyleEdit.Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean);
 var
   i: integer;
 begin
-  inherited Create(AObj, AAboutAttr);
-  LineStyleComboBox           := TComboBox.Create(VectGraph.AttributesBar);
-  LineStyleComboBox.Parent    := VectGraph.AttributesBar;
-  LineStyleComboBox.Left      := trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  LineStyleComboBox.Width     := trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
+  inherited Create(AObjs, AAboutAttr, defProp);
+  LineStyleComboBox := TComboBox.Create(VectGraph.AttributesBar);
+  LineStyleComboBox.Parent := VectGraph.AttributesBar;
+  LineStyleComboBox.Left := trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
+  LineStyleComboBox.Width := trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
   for i := 0 to Length(LineStyles) - 1 do
     LineStyleComboBox.Items.Add(LineStyles[i]._Type);
-  LineStyleComboBox.OnChange  := @OnChange;
-  LineStyleComboBox.ReadOnly  := True;
+  LineStyleComboBox.OnChange := @OnChange;
+  LineStyleComboBox.ReadOnly := True;
   LineStyleComboBox.ItemIndex := 1;
-  LineStyleComboBox.Top       := VectGraph.AttributesBar.Tag;
-  if AttrValues.Values[AboutAttr^.Name] <> '' then
-    SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+  LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
+  if (defProp) and (AttrValues.Values[AboutAttr^.Name] <> '')then
+   for i:=0 to High(AObjs) do;
+    SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+  ReBuild;
 end;
 
 
 procedure TLineStyleEdit.OnChange(Sender: TObject);
 var
-  tmp: integer;
+  i: integer;
 begin
-  SetInt64Prop(obj, AboutAttr, TComboBox(Sender).ItemIndex);
+  for i:=0 to High(Objs) do
+    SetInt64Prop(Objs[i], AboutAttr, TComboBox(Sender).ItemIndex);
   CurrentStyles.LineStyle := LineStyles[TComboBox(Sender).ItemIndex].LineStyle;
   AttrValues.Values[AboutAttr^.Name] := IntToStr(TComboBox(Sender).ItemIndex);
   inherited OnChange(Sender);
@@ -221,31 +290,57 @@ begin
   inherited Destroy;
 end;
 
+procedure TLineStyleEdit.ReBuild;
+var
+  i, j: integer;
+begin
+  j := GetInt64Prop(objs[0], AboutAttr);
+  for i := 1 to high(objs) do
+    if GetInt64Prop(objs[i], AboutAttr) <> j then
+    begin
+      j := integer(psSolid);
+      break;
+    end;
+  for i := 0 to LineStyleComboBox.Items.Count - 1 do
+  begin
+    if integer(PtrUint(LineStyleComboBox.Items.Objects[i])) = j Then
+    begin
+      LineStyleComboBox.ItemIndex := i;
+      exit;
+    end;
+  end;
+end;
+
 { TBrushStyleEdit }
 
-constructor TBrushStyleEdit.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
+constructor TBrushStyleEdit.Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean);
 var
   i: integer;
 begin
-  inherited Create(AObj, AAboutAttr);
-  BrushStyleComboBox          := TComboBox.Create(nil);
-  BrushStyleComboBox.Parent   := VectGraph.AttributesBar;
-  BrushStyleComboBox.Left     := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  BrushStyleComboBox.Width    := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
+  inherited Create(AObjs, AAboutAttr, defProp);
+  BrushStyleComboBox := TComboBox.Create(nil);
+  BrushStyleComboBox.Parent := VectGraph.AttributesBar;
+  BrushStyleComboBox.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
+  BrushStyleComboBox.Width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
   for i := 0 to Length(FillStyles) - 1 do
     BrushStyleComboBox.Items.Add(FillStyles[i]._Type);
   BrushStyleComboBox.OnChange := @OnChange;
-  BrushStyleComboBox.Style    := csOwnerDrawFixed;
+  BrushStyleComboBox.Style := csOwnerDrawFixed;
   BrushStyleComboBox.ReadOnly := True;
-  BrushStyleComboBox.Top      := VectGraph.AttributesBar.tag;
-  if (AttrValues.Values[AboutAttr^.Name] <> '') then
-    SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
-  BrushStyleComboBox.ItemIndex  := 1;
+  BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
+  if (defProp) and (AttrValues.Values[AboutAttr^.Name] <> '')then
+   for i:=0 to High(AObjs) do;
+    SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+  BrushStyleComboBox.ItemIndex := 1;
+  ReBuild;
 end;
 
 procedure TBrushStyleEdit.OnChange(Sender: TObject);
+var
+  i: Integer;
 begin
-  SetInt64Prop(obj, AboutAttr, TCombobox(Sender).ItemIndex);
+  for i:=0 to High(Objs) do
+    SetInt64Prop(Objs[i], AboutAttr, TCombobox(Sender).ItemIndex);
   CurrentStyles.FillStyle := FillStyles[TCombobox(Sender).ItemIndex].BrushStyle;
   AttrValues.Values[AboutAttr^.Name] := IntToStr(TCombobox(Sender).ItemIndex);
   inherited OnChange(Sender);
@@ -257,30 +352,58 @@ begin
   inherited Destroy;
 end;
 
+procedure TBrushStyleEdit.ReBuild;
+var
+  i, j: integer;
+begin
+  j := GetInt64Prop(objs[0], AboutAttr);
+  for i := 1 to high(objs) do
+    if GetInt64Prop(objs[i], AboutAttr) <> j then
+    begin
+      j := integer(psSolid);
+      break;
+    end;
+  for i := 0 to BrushStyleComboBox.Items.Count - 1 do
+  begin
+    if integer(PtrUint(BrushStyleComboBox.Items.Objects[i])) = j Then
+    begin
+      BrushStyleComboBox.ItemIndex := i;
+      exit;
+    end;
+  end;
+end;
+
 { TEditSpin }
 
-constructor TEditSpin.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
+constructor TEditSpin.Create(AObjs:array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean);
+var
+  i: Integer;
 begin
-  inherited Create(AObj, AAboutAttr);
-  DSpin                  := TSpinEdit.Create(nil);
-  DSpin.MinValue         := 1;
-  DSpin.MaxValue         := 100;
-  DSpin.parent           := VectGraph.AttributesBar;
-  DSpin.Left             := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  DSpin.Width            := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
-  DSpin.OnChange         := @OnChange;
-  DSpin.Top              := VectGraph.AttributesBar.Tag;
-  if (AttrValues.Values[AboutAttr^.Name] <> '') then
-    SetInt64Prop(obj, AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+  inherited Create(AObjs, AAboutAttr, defProp);
+  DSpin := TSpinEdit.Create(nil);
+  DSpin.MinValue := 1;
+  DSpin.MaxValue := 100;
+  DSpin.parent := VectGraph.AttributesBar;
+  DSpin.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
+  DSpin.Width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
+  DSpin.OnChange := @OnChange;
+  DSpin.Top := VectGraph.AttributesBar.Tag;
+  if (defProp) and (AttrValues.Values[AboutAttr^.Name] <> '')then
+   for i:=0 to High(AObjs) do;
+    SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
   if AboutAttr^.Name = 'FLineWidth' then
     DSpin.Value := CurrentStyles.LineWidth
   else
     DSpin.Value := CurrentStyles.Flexure;
+  ReBuild;
 end;
 
 procedure TEditSpin.OnChange(Sender: TObject);
+var
+  i: Integer;
 begin
-  SetInt64Prop(obj, AboutAttr, TSpinEdit(Sender).Value);
+  for i:=0 to High(Objs) do
+    SetInt64Prop(Objs[i], AboutAttr, TSpinEdit(Sender).Value);
   if AboutAttr^.Name = 'FLineWidth' then
     CurrentStyles.LineWidth := TSpinEdit(Sender).Value;
   if AboutAttr^.Name = 'FFlexure' then
@@ -295,17 +418,33 @@ begin
   inherited Destroy;
 end;
 
+procedure TEditSpin.ReBuild;
+var
+  j: Int64;
+  i: integer;
+begin
+  j := GetInt64Prop(objs[0], AboutAttr);
+  for i := 0 to high(objs) do
+    if GetInt64Prop(objs[i], AboutAttr) <> j then
+    begin
+      j := GetInt64Prop(objs[i], AboutAttr);
+      Changed := true;
+      break;
+    end;
+  DSpin.Value := j;
+end;
+
 { TColorEdit }
 
-constructor TColorEdit.Create(AObj: TPersistent; AAboutAttr: PPropInfo);
+constructor TColorEdit.Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo; defProp: Boolean);
 begin
-  inherited Create(AObj, AAboutAttr);
-  ColorBttn                 := TColorButton.Create(nil);
-  ColorBttn.Parent          := VectGraph.AttributesBar;
-  ColorBttn.Left            := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  ColorBttn.Align           := alCustom;
-  ColorBttn.Width           := 80;
-  ColorBttn.OnColorChanged  := @OnChange;
+  inherited Create(AObjs, AAboutAttr, defProp);
+  ColorBttn := TColorButton.Create(nil);
+  ColorBttn.Parent := VectGraph.AttributesBar;
+  ColorBttn.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
+  ColorBttn.Align := alCustom;
+  ColorBttn.Width := 80;
+  ColorBttn.OnColorChanged := @OnChange;
   if AboutAttr^.Name = 'FLineColor' then
     ColorBttn.ButtonColor := CurrentStyles.LineColor
   else
@@ -318,6 +457,7 @@ begin
     CurrentStyles.LineColor := ColorBttn.ButtonColor
   else
     CurrentStyles.FillColor := ColorBttn.ButtonColor;
+  Inherited OnChange(Sender);
 end;
 
 destructor TColorEdit.Destroy;
@@ -326,28 +466,30 @@ begin
   inherited Destroy;
 end;
 
+
+
 initialization
 
   EditToolsContainer := TRegEditTools.Create;
-  EditToolsContainer.RegTool('FLineType',  TLineStyleEdit);
+  EditToolsContainer.RegTool('FLineType', TLineStyleEdit);
   EditToolsContainer.RegTool('FLineWidth', TEditSpin);
-  EditToolsContainer.RegTool('FFillType',  TBrushStyleEdit);
-  EditToolsContainer.RegTool('FFlexure',   TEditSpin);
+  EditToolsContainer.RegTool('FFillType', TBrushStyleEdit);
+  EditToolsContainer.RegTool('FFlexure', TEditSpin);
   EditToolsContainer.RegTool('FLineColor', TColorEdit);
   EditToolsContainer.RegTool('FFillColor', TColorEdit);
 
   AttrValues := TStringList.Create;
   AttrValues.Values['FLineWidth'] := '4';
-  AttrValues.Values['FLineType']  := '2';
-  AttrValues.Values['FFillType']  := '0';
-  AttrValues.Values['FFlexure']   := '15';
+  AttrValues.Values['FLineType'] := '2';
+  AttrValues.Values['FFillType'] := '0';
+  AttrValues.Values['FFlexure'] := '15';
 
   AttrNames := TStringList.Create;
   AttrNames.Values['FLineWidth'] := 'Толщина линии';
   AttrNames.Values['FLineColor'] := 'Цвет линии';
-  AttrNames.Values['FLineType']  := 'Тип линии';
-  AttrNames.Values['FFillType']  := 'Тип заливки';
+  AttrNames.Values['FLineType'] := 'Тип линии';
+  AttrNames.Values['FFillType'] := 'Тип заливки';
   AttrNames.Values['FFillColor'] := 'Цвет заливки';
-  AttrNames.Values['FFlexure']   := 'Округление углов';
+  AttrNames.Values['FFlexure'] := 'Округление углов';
 
 end.
