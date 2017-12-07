@@ -320,7 +320,11 @@ var
   tmpPoint: TPoint;
 begin
 <<<<<<< HEAD
+<<<<<<< HEAD
   SelectedCount:=0;
+=======
+   SelectedCount:=0;
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 =======
    SelectedCount:=0;
 >>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
@@ -338,7 +342,11 @@ begin
         objTransform.W2S(FigureItems[i].MinCoor))
     else
 <<<<<<< HEAD
+<<<<<<< HEAD
       FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert);
+=======
+     FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert);
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 =======
      FigureItems[i].selectfig(SelectPoint,EndSelPoint, FigureItems[i].vert);
 >>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce

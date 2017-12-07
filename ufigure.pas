@@ -168,6 +168,7 @@ begin
   R2:=ToRect(FSAPoint,FFAPoint);
   R1:=ToRect(SAPoint,FAPoint);
 <<<<<<< HEAD
+<<<<<<< HEAD
   cond1 := ((R1.Top>=R2.Top) and (R1.Top<=R2.Bottom)) or
            ((R1.Bottom>=R2.Top) and (R1.Bottom<=R2.Bottom));
 =======
@@ -188,6 +189,13 @@ begin
   //  cond4:=True;
   if (cond1 or cond2 or cond3) and not cond4 and not cond5 then
 =======
+  if cond1 and cond2 then
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
+=======
+  cond1 := ((R1.Top<=R2.Top) and (R1.Bottom>=R2.Bottom));
+
+  cond2 := ((R1.Left<=R2.Left) and (R1.Right>=R2.Right));
+
   if cond1 and cond2 then
 >>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
     IsSelected := True;

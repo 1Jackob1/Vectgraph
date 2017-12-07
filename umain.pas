@@ -263,6 +263,35 @@ begin
 
 end;
 
+<<<<<<< HEAD
+=======
+procedure TVectGraph.EditionsDelClick(Sender: TObject);
+var
+  i,j,k: Integer;
+begin
+  for k:=0 to SelectedCount do begin
+   for j:=0 to Length(FigureItems)-1 do begin
+     i:=j;
+       if (FigureItems[j]<>nil) and FigureItems[j].IsSelected then begin
+        FreeAndNil(FigureItems[j]);
+          while i<Length(FigureItems)-1 do begin
+            tmpSwap:=FigureItems[i];
+            FigureItems[i]:=FigureItems[i+1];
+            FigureItems[i+1]:=tmpSwap;
+            i+=1;
+          end;
+       end;
+       DrawArea.Invalidate;
+   end;
+   end;
+
+   SetLength(FigureItems,Length(FigureItems)-SelectedCount);
+
+
+
+end;
+
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 
 procedure TVectGraph.EditionsReDoClick(Sender: TObject);
 begin
@@ -280,6 +309,10 @@ var
   i,j: Integer;
 begin
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 =======
 
 >>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
@@ -295,6 +328,10 @@ begin
        DrawArea.Invalidate;
    end;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 =======
 
 >>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
@@ -305,6 +342,10 @@ var
   i,j: Integer;
 begin
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 =======
 
 >>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
@@ -320,6 +361,10 @@ begin
        DrawArea.Invalidate;
    end;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
 =======
 
 >>>>>>> d9e7cd10c18151bcd73fe60a2bc27dedf2ff70ce
