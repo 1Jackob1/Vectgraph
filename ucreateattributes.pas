@@ -92,7 +92,6 @@ type
     constructor Create(AObjs: array of TPersistent; AAboutAttr: PPropInfo;
       defProp: boolean); override;
     destructor Destroy; override;
-    //procedure ReBuild; override;
   end;
 
 
@@ -124,7 +123,7 @@ var
 
 implementation
 
-uses Umain;
+uses Umain, UTool;
 
 
 { TFigureAttr }
@@ -168,15 +167,12 @@ procedure TEditCreate.SelectAttrs(AObj: TPersistent);
 var
   ArrOfTPer: array of TPersistent;
 begin
-  if AObj <> nil then
-  begin
-    SingleProp := True;
-    SetLength(ArrOfTPer, 1);
-    ArrOfTPer[0] := AObj;
-    SelectManyAttrs(ArrOfTPer);
-  end
-  else
+  if AObj = nil then
     exit;
+  SingleProp := True;
+  SetLength(ArrOfTPer, 1);
+  ArrOfTPer[0] := AObj;
+  SelectManyAttrs(ArrOfTPer);
 end;
 
 procedure TEditCreate.SelectManyAttrs(AObjs: array of TPersistent);
@@ -212,15 +208,15 @@ begin
     k := GetPropList(Objs[0], PropertyList);
     for i := 0 to k - 1 do
     begin
-      CrossOut := True;
-      {for j := 1 to High(Objs) do
-        if not (CheckObj(Objs[j], PropertyList^[i])) then
-        begin
-          CrossOut := False;
-          Break;
-        end;}
-      if CrossOut then
-      begin
+      //CrossOut := True;
+      //for j := 1 to High(Objs) do
+      //  if not (CheckObj(Objs[j], PropertyList^[i])) then
+      //  begin
+      //    CrossOut := False;
+      //    Break;
+      //  end;
+      //if CrossOut then
+      //begin
         for j := 0 to High(EditToolsContainer.EditTool) do
         begin
           if PropertyList^[i]^.Name = EditToolsContainer.EditTool[j].ItemName then
@@ -232,7 +228,7 @@ begin
             break;
           end;
         end;
-      end;
+      //end;
     end;
   end;
   SingleProp := False;
@@ -281,11 +277,12 @@ begin
     LineStyleComboBox.Items.Add(LineStyles[i]._Type);
   LineStyleComboBox.OnChange := @OnChange;
   LineStyleComboBox.ReadOnly := True;
-  LineStyleComboBox.ItemIndex := 1;
+  LineStyleComboBox.ItemIndex := CurrentStyles.LineStyleNum;
+  AttrValues.Values[AboutAttr^.Name]:=IntToStr(CurrentStyles.LineStyleNum);
   LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
   if (defProp) and (AttrValues.Values[AboutAttr^.Name] <> '') then
-    for i := 0 to High(AObjs) do ;
-  SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+    for i := 0 to High(AObjs) do
+      SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
   ReBuild;
 end;
 
@@ -296,7 +293,7 @@ var
 begin
   for i := 0 to High(Objs) do
     SetInt64Prop(Objs[i], AboutAttr, TComboBox(Sender).ItemIndex);
-  CurrentStyles.LineStyle := LineStyles[TComboBox(Sender).ItemIndex].LineStyle;
+  CurrentStyles.LineStyleNum := TComboBox(Sender).ItemIndex;
   AttrValues.Values[AboutAttr^.Name] := IntToStr(TComboBox(Sender).ItemIndex);
   inherited OnChange(Sender);
 end;
@@ -311,21 +308,21 @@ procedure TLineStyleEdit.ReBuild;
 var
   i, j: integer;
 begin
-  j := GetInt64Prop(objs[0], AboutAttr);
-  for i := 1 to high(objs) do
-    if GetInt64Prop(objs[i], AboutAttr) <> j then
-    begin
-      j := integer(psSolid);
-      break;
-    end;
-  for i := 0 to LineStyleComboBox.Items.Count - 1 do
-  begin
-    if integer(PtrUint(LineStyleComboBox.Items.Objects[i])) = j then
-    begin
-      LineStyleComboBox.ItemIndex := i;
-      exit;
-    end;
-  end;
+  //j := GetInt64Prop(objs[0], AboutAttr);
+  //for i := 0 to high(objs) do
+  //  if GetInt64Prop(objs[i], AboutAttr) <> j then
+  //  begin
+  //    j := integer(psSolid);
+  //    break;
+  //  end;
+  //for i := 0 to LineStyleComboBox.Items.Count - 1 do
+  //begin
+  //  if integer(PtrUint(LineStyleComboBox.Items.Objects[i])) = j then
+  //  begin
+  //    LineStyleComboBox.ItemIndex := i;
+  //    exit;
+  //  end;
+  //end;
 end;
 
 { TBrushStyleEdit }
@@ -346,10 +343,11 @@ begin
   BrushStyleComboBox.Style := csOwnerDrawFixed;
   BrushStyleComboBox.ReadOnly := True;
   BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
+  AttrValues.Values[AboutAttr^.Name]:=IntToStr(CurrentStyles.FillStyleNum);
   if (defProp) and (AttrValues.Values[AboutAttr^.Name] <> '') then
-    for i := 0 to High(AObjs) do ;
-  SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
-  BrushStyleComboBox.ItemIndex := 1;
+    for i := 0 to High(AObjs) do
+      SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
+  BrushStyleComboBox.ItemIndex := CurrentStyles.FillStyleNum;
   ReBuild;
 end;
 
@@ -359,7 +357,7 @@ var
 begin
   for i := 0 to High(Objs) do
     SetInt64Prop(Objs[i], AboutAttr, TCombobox(Sender).ItemIndex);
-  CurrentStyles.FillStyle := FillStyles[TCombobox(Sender).ItemIndex].BrushStyle;
+  CurrentStyles.FillStyleNum := TCombobox(Sender).ItemIndex;
   AttrValues.Values[AboutAttr^.Name] := IntToStr(TCombobox(Sender).ItemIndex);
   inherited OnChange(Sender);
 end;
@@ -407,19 +405,23 @@ begin
   DSpin.Width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
   DSpin.OnChange := @OnChange;
   DSpin.Top := VectGraph.AttributesBar.Tag;
-  if (defProp) and (AttrValues.Values[AboutAttr^.Name] <> '') then
-    for i := 0 to High(AObjs) do ;
-  SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
-  if AboutAttr^.Name = 'FLineWidth' then
+  if AboutAttr^.Name = 'FLineWidth' then begin
+    AttrValues.Values[AboutAttr^.Name]:=IntToStr(CurrentStyles.LineWidth);
     DSpin.Value := CurrentStyles.LineWidth
-  else
+  end
+  else begin
+    AttrValues.Values[AboutAttr^.Name]:=IntToStr(CurrentStyles.Flexure);
     DSpin.Value := CurrentStyles.Flexure;
+  end;
+  if (defProp) and (AttrValues.Values[AboutAttr^.Name] <> '') then
+    for i := 0 to High(AObjs) do
+      SetInt64Prop(AObjs[i], AboutAttr, StrToInt64(AttrValues.Values[AboutAttr^.Name]));
   ReBuild;
 end;
 
 procedure TEditSpin.OnChange(Sender: TObject);
 var
-  i: integer;
+  i, j: integer;
 begin
   for i := 0 to High(Objs) do
     SetInt64Prop(Objs[i], AboutAttr, TSpinEdit(Sender).Value);
@@ -462,8 +464,9 @@ begin
   ColorBttn := TColorButton.Create(nil);
   ColorBttn.Parent := VectGraph.AttributesBar;
   ColorBttn.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  ColorBttn.Align := alCustom;
+  //ColorBttn.Align := alCustom;
   ColorBttn.Width := 80;
+  ColorBttn.Top:= VectGraph.AttributesBar.Tag;
   ColorBttn.OnColorChanged := @OnChange;
   if AboutAttr^.Name = 'FLineColor' then
     ColorBttn.ButtonColor := CurrentStyles.LineColor
@@ -472,7 +475,11 @@ begin
 end;
 
 procedure TColorEdit.OnChange(Sender: TObject);
+var
+  i: integer;
 begin
+  for i := 0 to High(Objs) do
+    SetInt64Prop(Objs[i], AboutAttr, ColorBttn.ButtonColor);
   if AboutAttr^.Name = 'FLineColor' then
     CurrentStyles.LineColor := ColorBttn.ButtonColor
   else
@@ -499,8 +506,8 @@ initialization
   EditToolsContainer.RegTool('FFillColor', TColorEdit);
 
   AttrValues := TStringList.Create;
-  AttrValues.Values['FLineWidth'] := '4';
-  AttrValues.Values['FLineType'] := '2';
+  AttrValues.Values['FLineWidth'] := '1';
+  AttrValues.Values['FLineType'] := '0';
   AttrValues.Values['FFillType'] := '0';
   AttrValues.Values['FFlexure'] := '15';
 

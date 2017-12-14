@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, FPCanvas, UTool,
-  UTransform, UComparator, UDefine, UCreateAttributes;
+  UTransform, UComparator, UDefine, UCreateAttributes, UFigure;
 
 type
 
@@ -69,7 +69,6 @@ type
     { private declarations }
   public
     { public declarations }
-    //procedure EditSelectedFig;
   end;
 
 var
@@ -105,14 +104,14 @@ begin
     Bttn.GroupIndex := 1;
 
     BttnImg := TPicture.Create;
-    BttnImg.LoadFromFile('./icons/'+ToolConst.Tools[i].ClassName + '.png');
+    BttnImg.LoadFromFile('./icons/' + ToolConst.Tools[i].ClassName + '.png');
     Bttn.Glyph := BttnImg.Bitmap;
 
   end;
 
   objTransform := TTransform.Create(DrawArea.Width, DrawArea.Height);
   EditFigure := TEditCreate.Create;
-  EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
+  EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[0].CreateAttributes));
   ScaleSpin.MaxValue := MAX_ZOOM;
   ScaleSpin.MinValue := MIN_ZOOM / 100;
 
@@ -121,7 +120,7 @@ end;
 
 procedure TVectGraph.ActionUnDoExecute(Sender: TObject);
 begin
-   EditionsUnDoClick(Sender);
+  EditionsUnDoClick(Sender);
 end;
 
 procedure TVectGraph.ActionReDoExecute(Sender: TObject);
@@ -134,16 +133,19 @@ begin
   EditionsClsClick(Sender);
 end;
 
- { MouseDown/Move/Up }
+{ MouseDown/Move/Up }
 
- procedure TVectGraph.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TVectGraph.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
-var i:integer;
+var
+  i: integer;
 begin
   if Button = mbLeft then
   begin
-    for i:=0 to Length(FigureItems)-1 do
-      FigureItems[i].IsSelected:=false;
+    for i := 0 to Length(FigureItems) - 1 do
+      FigureItems[i].IsSelected := False;
+    ForAllFigrStyles := CurrentStyles;
+    ;
     SetLength(History, 0);
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
@@ -169,9 +171,11 @@ begin
     ToolConst.Tools[ToolCode].MouseUp(Point(DrawArea.Width, DrawArea.Height));
     DrawArea.Invalidate;
     ScaleSpin.Value := objTransform.Zoom;
+    EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
   end;
 end;
-  {/////}
+
+{/////}
 procedure TVectGraph.DrawAreaPaint(Sender: TObject);
 var
   i: integer;
@@ -188,56 +192,56 @@ begin
       MaxDACoor := MaxPoint(FigureItems[i].MaxCoor, MaxDACoor);
       MinDACoor := MinPoint(FigureItems[i].MinCoor, MinDACoor);
     end;
-      FigureItems[i].Draw(DrawArea.Canvas);
+    FigureItems[i].Draw(DrawArea.Canvas, FigureItems[i].IsSelected);
   end;
-  if (Delete) then begin
-       FreeAndNil(FigureItems[High(FigureItems)]);
-       SetLength(FigureItems, Length(FigureItems) - 1);
-       Delete:=False;
-       DrawArea.Invalidate;
-      end;
+  if (Delete) then
+  begin
+    FreeAndNil(FigureItems[High(FigureItems)]);
+    SetLength(FigureItems, Length(FigureItems) - 1);
+    Delete := False;
+    DrawArea.Invalidate;
+  end;
   ScrolCalc;
 end;
 
 
 procedure TVectGraph.EditionsClsClick(Sender: TObject);
 var
-  i: Integer;
+  i: integer;
 begin
-  for i:=0 to Length(FigureItems) - 1 do
-   FreeAndNil(FigureItems[i]);
-  for i:=0 to Length(History) - 1 do
-   FreeAndNil(History[i]);
-  SetLength(FigureItems,0);
-  SetLength(History,0);
+  for i := 0 to Length(FigureItems) - 1 do
+    FreeAndNil(FigureItems[i]);
+  for i := 0 to Length(History) - 1 do
+    FreeAndNil(History[i]);
+  SetLength(FigureItems, 0);
+  SetLength(History, 0);
   ScrolCalc;
   DrawArea.Invalidate;
 end;
 
 procedure TVectGraph.EditionsDelClick(Sender: TObject);
 var
-  i,j,k: Integer;
+  i, j, k: integer;
 begin
-  for k:=0 to SelectedCount do begin
-    for j:=0 to High(FigureItems) do begin
-      i:=j;
-      if (FigureItems[j]<>nil) and FigureItems[j].IsSelected then begin
+  for k := 0 to SelectedCount do
+  begin
+    for j := 0 to High(FigureItems) do
+    begin
+      i := j;
+      if (FigureItems[j] <> nil) and FigureItems[j].IsSelected then
+      begin
         FreeAndNil(FigureItems[j]);
-        while i<High(FigureItems) do begin
-          //tmpSwap:=FigureItems[i];
-          FigureItems[i]:=FigureItems[i+1];
-          //FigureItems[i+1]:=tmpSwap;
-          i+=1;
+        while i < High(FigureItems) do
+        begin
+          FigureItems[i] := FigureItems[i + 1];
+          i += 1;
         end;
-        //FigureItems[i] := nil;
       end;
     end;
   end;
-  SetLength(FigureItems,Length(FigureItems)-SelectedCount);
+  SetLength(FigureItems, Length(FigureItems) - SelectedCount);
   DrawArea.Invalidate;
 end;
-
-{ Un/ReDo }
 
 procedure TVectGraph.EditionsReDoClick(Sender: TObject);
 begin
@@ -252,36 +256,36 @@ end;
 
 procedure TVectGraph.EditionsReplaseDownClick(Sender: TObject);
 var
-  i,j: Integer;
+  i, j: integer;
 begin
-   for j:=Length(FigureItems)-1 downto 0 do begin
-     i:=j;
-       if FigureItems[j].IsSelected then
-          while i>0 do begin
-            tmpSwap:=FigureItems[i];
-            FigureItems[i]:=FigureItems[i-1];
-            FigureItems[i-1]:=tmpSwap;
-            i-=1;
-          end;
-       DrawArea.Invalidate;
-   end;
+  for j := Length(FigureItems) - 1 downto 0 do
+  begin
+    i := j;
+    if FigureItems[j].IsSelected then
+      while i > 0 do
+      begin
+        Swap(FigureItems[i], FigureItems[i - 1]);
+        i -= 1;
+      end;
+    DrawArea.Invalidate;
+  end;
 end;
 
 procedure TVectGraph.EditionsReplaseUpClick(Sender: TObject);
 var
-  i,j: Integer;
+  i, j: integer;
 begin
-   for j:=0 to Length(FigureItems)-1 do begin
-     i:=j;
-       if FigureItems[j].IsSelected then
-          while i<Length(FigureItems)-1 do begin
-            tmpSwap:=FigureItems[i];
-            FigureItems[i]:=FigureItems[i+1];
-            FigureItems[i+1]:=tmpSwap;
-            i+=1;
-          end;
-       DrawArea.Invalidate;
-   end;
+  for j := 0 to Length(FigureItems) - 1 do
+  begin
+    i := j;
+    if FigureItems[j].IsSelected then
+      while i < Length(FigureItems) - 1 do
+      begin
+        Swap(FigureItems[i], FigureItems[i + 1]);
+        i += 1;
+      end;
+    DrawArea.Invalidate;
+  end;
 end;
 
 procedure TVectGraph.EditionsUnDoClick(Sender: TObject);
@@ -294,7 +298,7 @@ begin
     DrawArea.Invalidate;
   end;
 end;
-{/////}
+
 
 procedure TVectGraph.EditionsShowAllClick(Sender: TObject);
 begin
@@ -312,8 +316,6 @@ begin
   EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
 end;
 
-
-{Hor/Vert Scrolls}
 procedure TVectGraph.HorizontalScrollScroll(Sender: TObject;
   ScrollCode: TScrollCode; var ScrollPos: integer);
 begin
@@ -326,7 +328,6 @@ procedure TVectGraph.VerticalScrollScroll(Sender: TObject;
 begin
   DrawArea.Invalidate;
 end;
-{/////}
 
 procedure TVectGraph.ScaleSpinChange(Sender: TObject);
 begin

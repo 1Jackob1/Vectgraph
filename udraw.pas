@@ -18,8 +18,14 @@ begin
   for i := 0 to High(FigureItems) do
     if FigureItems[i].IsSelected then
     begin
+      CurrentStyles.LineStyleNum:=Integer(FigureItems[i].FLineType);
+      CurrentStyles.LineColor:=FigureItems[i].FLineColor;
+      CurrentStyles.LineWidth:=FigureItems[i].FLineWidth;
+      CurrentStyles.FillColor:=FigureItems[i].FFillColor;
+      CurrentStyles.FillStyleNum:=Integer(FigureItems[i].FFillType);
+      CurrentStyles.Flexure:=FigureItems[i].FFlexure;
       SetLength(EditArr, Length(EditArr) + 1);
-      EditArr[high(EditArr)] := TPersistent(FigureItems[i]);
+      EditArr[high(EditArr)] := FigureItems[i];
     end;
   EditFigure.SelectManyAttrs(EditArr);
 end;

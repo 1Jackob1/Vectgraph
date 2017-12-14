@@ -102,10 +102,20 @@ type
   {TToolSelection}
 
   TToolSelection = class(TTool)
+    WasClick: Boolean;
     procedure MouseMove(APoint: TPoint); override;
     procedure MouseDown(APoint: TPoint); override;
     procedure MouseUp(APoint: TPoint); override;
   end;
+
+  {TToolResize}
+
+  TToolResize = class(TTool)
+    procedure MouseMove(APoint: TPoint); override;
+    procedure MouseDown(APoint: TPoint); override;
+    procedure MouseUp(APoint: TPoint); override;
+  end;
+
 
 var
   ToolConst: TToolReg;
@@ -126,7 +136,7 @@ end;
 
 function TTool.CreateAttributes: TPersistent;
 begin
-  Result := TPersistent(objFigure);
+  Result := objFigure;
 end;
 
 { TToolLine }
@@ -141,9 +151,8 @@ procedure TToolLine.MouseDown(APoint: TPoint);
 var
   DP: TDoublePoint;
 begin
-  objFigure := TPolyLine.Create;
   SetLength(FigureItems, Length(FigureItems) + 1);
-  FigureItems[High(FigureItems)] := TPolyLine.Create;
+  FigureItems[High(FigureItems)] := objFigure;
   DP := objTransform.S2W(APoint);
   FigureItems[High(FigureItems)].NextPoint(DP);
 end;
@@ -172,7 +181,7 @@ var
   DP: TDoublePoint;
 begin
   SetLength(FigureItems, Length(FigureItems) + 1);
-  FigureItems[High(FigureItems)] := TPolyLine.Create;
+  FigureItems[High(FigureItems)] := objFigure;
   DP := objTransform.S2W(APoint);
   FigureItems[High(FigureItems)].NextPoint(DP);
 end;
@@ -200,7 +209,7 @@ var
   DP: TDoublePoint;
 begin
   SetLength(FigureItems, Length(FigureItems) + 1);
-  FigureItems[High(FigureItems)] := TRectangle.Create;
+  FigureItems[High(FigureItems)] := objFigure;
   DP := objTransform.S2W(APoint);
   FigureItems[High(FigureItems)].NextPoint(DP);
 end;
@@ -228,7 +237,7 @@ var
   DP: TDoublePoint;
 begin
   SetLength(FigureItems, Length(FigureItems) + 1);
-  FigureItems[High(FigureItems)] := TRoundRect.Create;
+  FigureItems[High(FigureItems)] := objFigure;
   DP := objTransform.S2W(APoint);
   FigureItems[High(FigureItems)].NextPoint(DP);
 end;
@@ -255,7 +264,7 @@ var
   DP: TDoublePoint;
 begin
   SetLength(FigureItems, Length(FigureItems) + 1);
-  FigureItems[High(FigureItems)] := TEllipse.Create;
+  FigureItems[High(FigureItems)] := objFigure;
   DP := objTransform.S2W(APoint);
   FigureItems[High(FigureItems)].NextPoint(DP);
 end;
@@ -309,12 +318,13 @@ begin
   SetLength(FigureItems, Length(FigureItems) + 1);
   FigureItems[High(FigureItems)] := TSpecialRect.Create;
   SelectPoint := APoint;
+  WasClick:=True;
 end;
 
 procedure TToolSelection.MouseMove(APoint: TPoint);
 begin
   EndSelPoint := APoint;
-
+  WasClick:=False;
 end;
 
 procedure TToolSelection.MouseUp(APoint: TPoint);
@@ -322,7 +332,18 @@ var
   i: integer;
   tmpPoint: TPoint;
 begin
+  if WasClick then EndSelPoint:=SelectPoint;
   SelectedCount := 0;
+  WasClick:=False;;
+  if(abs((SelectPoint.X - EndSelPoint.X) * (SelectPoint.Y - EndSelPoint.Y))<5) or
+  (EndSelPoint.X=0) or (EndSelPoint.Y = 0) then
+  begin
+    EndSelPoint.X-=2;
+    SelectPoint.X+=5;
+    EndSelPoint.Y-=2;
+    SelectPoint.Y+=5;
+    WasClick:=True;
+  end;
   if (SelectPoint.X < EndSelPoint.X) then
   begin
     if (SelectPoint.Y < EndSelPoint.Y) then
@@ -363,6 +384,39 @@ begin
   end;
   EditSelectedFig;
   Delete := True;
+  if WasClick then SelectPoint:=EndSelPoint;
+
+end;
+
+{ TToolResize }
+
+procedure TToolResize.MouseDown(Apoint: TPoint);
+begin
+  tmpDP := ToDP(APoint);
+end;
+
+procedure TToolResize.MouseMove(Apoint: TPoint);
+var
+  i, j: integer;
+begin
+  for i := 0 to High(FigureItems) do
+  begin
+    if FigureItems[i].IsSelected then
+      if Length(FigureItems[i].vert) > 0 then
+      begin
+        for j := 0 to High(FigureItems[i].vert) do
+        begin
+          FigureItems[i].vert[j].X += (ToDP(APoint).X - tmpDP.X) / objTransform.Zoom;
+          FigureItems[i].vert[j].Y += (ToDP(APoint).Y - tmpDP.Y) / objTransform.Zoom;
+          tmpDP := ToDP(APoint);
+        end;
+      end;
+  end;
+end;
+
+procedure TToolResize.MouseUp(Apoint: TPoint);
+begin
+
 end;
 
 { TToolReg }
@@ -384,5 +438,6 @@ initialization
   ToolConst.ToolReg(TToolHand);
   ToolConst.ToolReg(TToolLoupe);
   ToolConst.ToolReg(TToolSelection);
+  ToolConst.ToolReg(TToolResize)
 
 end.
