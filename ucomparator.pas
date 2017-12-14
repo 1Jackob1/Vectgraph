@@ -22,6 +22,8 @@ function MaxPoint(FirstDPoint, SecondDPoint: TDoublePoint): TDoublePoint;
 function MinPoint(FirstDPoint, SecondDPoint: TDoublePoint): TDoublePoint;
 operator >= (AFPoint, ASPoint: TPoint): boolean;
 operator <= (AFPoint, ASPoint: TPoint): boolean;
+operator - (APoint: TPoint; AInt: Integer): TPoint;
+operator + (APoint: TPoint; AInt: Integer): TPoint;
 
 implementation
 
@@ -77,6 +79,18 @@ end;
 operator <= (AFPoint, ASPoint: TPoint): boolean;
 begin
   Result := (AFPoint.X <= ASPoint.X) and (AFPoint.Y <= ASPoint.Y);
+end;
+
+operator - (APoint: TPoint; AInt: Integer): TPoint;
+begin
+  Result.X:=APoint.X-AInt;
+  Result.Y:=APoint.Y-AInt;
+end;
+
+operator + (APoint: TPoint; AInt: Integer): TPoint;
+begin
+  Result.X:=APoint.X+AInt;
+  Result.Y:=APoint.Y+AInt;
 end;
 
 end.

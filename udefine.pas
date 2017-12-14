@@ -56,7 +56,7 @@ const
     (_Type: '― • •'; LineStyle: psDashDotDot)
     );
 
-  TOOL_BUTTON_SIZE: integer = 36;
+  TOOL_BUTTON_SIZE: integer = 40;
   TOOL_BUTTON_MARGIN: integer = 2;
   TOOL_BUTTON_PADDING: integer = 2;
   MIN_ZOOM: real = 100;

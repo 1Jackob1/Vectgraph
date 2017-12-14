@@ -114,8 +114,6 @@ begin
 
 end;
 
-{ MouseDown/Move/Up }
-
 procedure TVectGraph.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 var
@@ -123,10 +121,10 @@ var
 begin
   if Button = mbLeft then
   begin
-    for i := 0 to Length(FigureItems) - 1 do
-      FigureItems[i].IsSelected := False;
+    if ToolCode <> High(ToolConst.Tools) then
+      for i := 0 to Length(FigureItems) - 1 do
+        FigureItems[i].IsSelected := False;
     ForAllFigrStyles := CurrentStyles;
-    SetLength(History, 0);
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
   end;
@@ -155,7 +153,6 @@ begin
   end;
 end;
 
-{/////}
 procedure TVectGraph.DrawAreaPaint(Sender: TObject);
 var
   i: integer;
@@ -215,12 +212,8 @@ var
 begin
   for i := 0 to Length(FigureItems) - 1 do
     FreeAndNil(FigureItems[i]);
-  for i := 0 to Length(History) - 1 do
-    FreeAndNil(History[i]);
   SetLength(FigureItems, 0);
-  SetLength(History, 0);
   ScrolCalc;
-
   DrawArea.Invalidate;
 end;
 
@@ -240,8 +233,9 @@ begin
   EditFigure.Destroy;
   EditFigure := TEditCreate.Create;
   EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
-  for i := 0 to Length(FigureItems) - 1 do
-    FigureItems[i].IsSelected := False;
+  if ToolCode<>High(ToolConst.Tools) then
+    for i := 0 to Length(FigureItems) - 1 do
+      FigureItems[i].IsSelected := False;
   DrawArea.Invalidate;
 end;
 

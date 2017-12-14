@@ -23,8 +23,9 @@ type
     MaxCoor, MinCoor: TDoublePoint;
     vert: array of TDoublePoint;
     IsSelected: boolean;
-
+    Anchros:array of TPoint;
     function checkSelecetion: boolean;
+    procedure changePoint(ADPoint: TDoublePoint; Code: Integer); virtual;
     procedure MouseMove(ADPoint: TDoublePoint); virtual; abstract;
     procedure NextPoint(ADPoint: TDoublePoint); virtual; abstract;
     procedure MouseUp(ADPoint: TDoublePoint); virtual;
@@ -49,6 +50,7 @@ type
   TSmlrRect = class(TFigure)
   private
     DPRect: TDRect;
+    //Anchros: TFigure;
     //RFillType: TFPBrushStyle;
     //RFillColor: TColor;
   public
@@ -60,6 +62,7 @@ type
     procedure Frame(ACanvas: TCanvas);
     procedure getFillColor(var AFillColor: TColor); override;
     procedure getFillType(var AFillType: TFPBrushStyle); override;
+    procedure changePoint(ADPoint: TDoublePoint; Code: Integer); override;
 
     property FFillColor: TColor read RFillColor write RFillColor;
     property FFillType: TFPBrushStyle read RFillType write RFillType;
@@ -131,6 +134,7 @@ type
     procedure selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoublePoint);
       override;
     procedure NextLine(ADPoint: TDoublePoint);
+    procedure DrawFrame(ACanvas: TCanvas; FAPoint, SAPoint: TPoint);
   published
     property FLineType: TFPPenStyle read LineType write LineType;
     property FLineWidth: integer read LineWidth write LineWidth;
@@ -150,7 +154,7 @@ procedure Swap(var A, B: TFigure);
 var
   CurrentStyles, ForAllFigrStyles: Styles;
   SelectPoint, EndSelPoint: TPoint;
-  FigureItems, History: array of TFigure;
+  FigureItems: array of TFigure;
 
 implementation
 
@@ -169,7 +173,8 @@ end;
 
 procedure TFigure.SetDefFigrStyles(Selected: boolean);
 begin
-
+  //MaxCoor:=ToDP(0.0,0.0);
+  //MinCoor:=ToDP(99999999999.9,99999999999.9);
   LineWidth := FLineWidth;
   LineColor := FLineColor;
   LineType := FLineType;
@@ -217,6 +222,11 @@ begin
 
 end;
 
+procedure TFigure.changePoint(ADpoint: TDoublePoint; Code: Integer);
+begin
+
+end;
+
 { TSmlrRect }
 
 procedure TSmlrRect.NextPoint(ADPoint: TDoublePoint);
@@ -238,8 +248,8 @@ begin
     Pen.Style := FLineType;
     Brush.Style := FFillType;
     Brush.Color := FFillColor;
-    MaxCoor := MaxPoint(DPRect.Top, DPRect.Bottom);
-    MinCoor := MinPoint(DPRect.Top, DPRect.Bottom);
+    MaxCoor := MaxPoint(DPRect.Top,DPRect.Bottom);
+    MinCoor := MinPoint(DPRect.Top,DPRect.Bottom);
   end;
 end;
 
@@ -250,9 +260,11 @@ end;
 
 procedure TSmlrRect.Frame(ACanvas: TCanvas);
 var
-  selectrect: TRect;
+  SelPoints: Array[0..1] of TPoint;
+  i: Integer;
 begin
   Offs := ACanvas.Pen.Width div 2 + 5;
+  SetLength(Anchros,4);
   with ACanvas do
   begin
     Pen.Width := 2;
@@ -260,10 +272,23 @@ begin
     Pen.Style := psDash;
     Brush.Style := bsClear;
   end;
-  selectrect := ToRect(objTransform.W2S(DPRect.Top), objTransform.W2S(DPRect.Bottom));
+  SelPoints[0]:=objTransform.W2S(DPRect.Top)- 2 - Offs;
+  SelPoints[1]:=objTransform.W2S(DPRect.Bottom)+ 2 + Offs;
   ACanvas.Rectangle(
-    selectrect.TopLeft.x - 2 - Offs, selectrect.TopLeft.y - 2 - Offs,
-    selectrect.BottomRight.x + 2 + Offs, selectrect.BottomRight.y + 2 + Offs);
+    SelPoints[0].x, SelPoints[0].y,
+    SelPoints[1].x, SelPoints[1].y);
+  Anchros[0]:=SelPoints[0];
+  Anchros[1].X:=SelPoints[1].X;
+  Anchros[1].Y:=SelPoints[0].Y;
+  Anchros[2]:=SelPoints[1];
+  Anchros[3].X:=SelPoints[0].X;
+  Anchros[3].Y:=SelPoints[1].Y;
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color:=clWhite;
+  for i:=0 to 3 do begin
+    ACanvas.Rectangle(Anchros[i].x-10, Anchros[i].y-10,Anchros[i].x+10, Anchros[i].y+10);
+  end;
+
 end;
 
 procedure TSmlrRect.getFillColor(var AFillColor: TColor);
@@ -276,6 +301,13 @@ begin
   AFillType := FFillType;
 end;
 
+procedure TSmlrRect.changePoint(ADPoint: TDoublePoint; Code: Integer);
+begin
+  case Code of
+  0: DPRect.Top:=ADPoint;
+  end;
+end;
+
 { TRectangle }
 
 constructor TRectangle.Create;
@@ -284,10 +316,15 @@ begin
 end;
 
 procedure TRectangle.Draw(ACanvas: TCanvas; Selected: boolean);
+var
+a,b:TPoint;
 begin
   inherited Draw(ACanvas, Selected);
   ACanvas.Rectangle(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)));
+    //a:=objTransform.W2S(MaxCoor);
+    //b:=objTransform.W2S(MinCoor);
+    //ACanvas.Rectangle(b.X,b.Y,a.X,a.Y);
   Offs := FLineWidth;
   if Selected then
     Frame(ACanvas);
@@ -350,7 +387,6 @@ procedure TPolyLine.Draw(ACanvas: TCanvas; Selected: boolean);
 var
   i: integer;
   FPoint, SPoint, FRPoint, SRPoint: TPoint;
-  Offs: integer;
 begin
   if Length(vert) = 0 then
     exit;
@@ -366,25 +402,18 @@ begin
     FPoint := objTransform.W2S(Vert[i]);
     SPoint := objTransform.W2S(Vert[i + 1]);
     ACanvas.Line(FPoint, SPoint);
-    if Selected then
-    begin
-      with ACanvas do
-      begin
-        Offs := Pen.Width div 2 + 5;
-        Pen.Width := 2;
-        Pen.Color := clBlack;
-        Pen.Style := psDash;
-        Brush.Style := bsClear;
-      end;
-      SRPoint := objTransform.W2S(MaxPoint(Vert[i], Vert[i + 1]));
-      FRPoint := objTransform.W2S(MinPoint(Vert[i], Vert[i + 1]));
-      ACanvas.Rectangle(FRPoint.X - Offs, FRPoint.Y - Offs, SRPoint.X + Offs, SRPoint.Y + Offs);
-    end;
     MinCoor := MinPoint(Vert[i], MinCoor);
     MaxCoor := MaxPoint(Vert[i], MaxCoor);
     MinCoor := MinPoint(Vert[i + 1], MinCoor);
     MaxCoor := MaxPoint(Vert[i + 1], MaxCoor);
   end;
+  if Selected then
+    begin
+      SRPoint := objTransform.W2S(MaxCoor);
+      FRPoint := objTransform.W2S(MinCoor);
+      DrawFrame(ACanvas,FRPoint,SRPoint);
+    end;
+
 end;
 
 procedure TPolyLine.MouseUp(ADPoint: TDoublePoint);
@@ -402,13 +431,39 @@ procedure TPolyLine.selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoubleP
 var
   i: integer;
 begin
-  for i := 0 to Length(AVert) - 1 do
+  for i := 0 to High(AVert) - 1 do
   begin
     if (objTransform.W2S(AVert[i]) <= FAPoint) and
       (objTransform.W2S(AVert[i]) >= SAPoint) and (not IsSelected) then
       IsSelected := True;
   end;
+end;
 
+procedure TPolyLine.DrawFrame(ACanvas: TCanvas; FAPoint, SAPoint: TPoint);
+var
+  Offs: Integer;
+  i:Integer;
+begin
+  SetLength(Anchros,4);
+  with ACanvas do
+  begin
+    Offs := Pen.Width div 2 + 5;
+    Pen.Width := 2;
+    Pen.Color := clBlack;
+    Pen.Style := psDash;
+    Brush.Style := bsClear;
+  end;
+  ACanvas.Rectangle(FAPoint.X - Offs, FAPoint.Y - Offs, SAPoint.X + Offs, SAPoint.Y + Offs);
+  Anchros[0]:=FAPoint;
+  Anchros[1].X:=SAPoint.X;
+  Anchros[1].Y:=FAPoint.Y;
+  Anchros[2]:=SAPoint;
+  Anchros[3].X:=FAPoint.X;
+  Anchros[3].Y:=SAPoint.Y;
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color:=clWhite;
+  for i:=0 to 3 do
+    ACanvas.Rectangle(Anchros[i].x-10, Anchros[i].y-10,Anchros[i].x+10, Anchros[i].y+10);
 end;
 
 {TSpecialRect}

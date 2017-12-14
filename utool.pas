@@ -111,9 +111,11 @@ type
   {TToolResize}
 
   TToolResize = class(TTool)
+    tmpP: TPoint;
     procedure MouseMove(APoint: TPoint); override;
     procedure MouseDown(APoint: TPoint); override;
     procedure MouseUp(APoint: TPoint); override;
+    function InAnchor(APoint: TPoint; AAnchros: Array of TPoint): Integer;
   end;
 
 
@@ -373,7 +375,7 @@ begin
 
   for i := 0 to Length(FigureItems) - 2 do
   begin
-    if (FigureItems[i] is TPolyLine) or (Length(FigureItems[i].vert) < 3) then
+    if  (not (FigureItems[i] is TPolyLine)) or (Length(FigureItems[i].vert) < 3) then
       FigureItems[i].selectfig(
         SelectPoint, EndSelPoint,
         objTransform.W2S(FigureItems[i].MaxCoor),
@@ -394,31 +396,43 @@ end;
 
 procedure TToolResize.MouseDown(Apoint: TPoint);
 begin
-  tmpDP := ToDP(APoint);
+  tmpP := APoint;
 end;
 
-procedure TToolResize.MouseMove(Apoint: TPoint);
+procedure TToolResize.MouseMove(APoint: TPoint);
 var
-  i, j: integer;
+  i, j, k, _j: integer;
 begin
   for i := 0 to High(FigureItems) do
   begin
-    if FigureItems[i].IsSelected then
-      if Length(FigureItems[i].vert) > 0 then
-      begin
-        for j := 0 to High(FigureItems[i].vert) do
-        begin
-          FigureItems[i].vert[j].X += (ToDP(APoint).X - tmpDP.X) / objTransform.Zoom;
-          FigureItems[i].vert[j].Y += (ToDP(APoint).Y - tmpDP.Y) / objTransform.Zoom;
-          tmpDP := ToDP(APoint);
-        end;
-      end;
+    if FigureItems[i].IsSelected then begin
+      j:=InAnchor(tmpP, FigureItems[i].Anchros);
+      k:=i;
+    end;
   end;
+  FigureItems[k].changePoint(objTransform.S2W(APoint),j);
 end;
 
 procedure TToolResize.MouseUp(Apoint: TPoint);
 begin
 
+end;
+
+function TToolResize.InAnchor(APoint: TPoint; AAnchros: Array of TPoint): Integer;
+var
+  i:Integer;
+begin
+  for i:=0 to High(AAnchros) do
+    if((AAnchros[i]-10<=APoint) and (AAnchros[i]+10>=APoint))then begin
+    Result:=i;
+    exit;
+  end;
+  if((AAnchros[0]-10<=APoint) and (AAnchros[2]+10>=APoint))then begin
+    Result:=5;
+    exit;
+  end;
+  Result:=-1;
+  exit;
 end;
 
 { TToolReg }
