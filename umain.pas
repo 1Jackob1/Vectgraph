@@ -24,12 +24,14 @@ type
     ItemProgClose: TMenuItem;
     Editions: TMenuItem;
     EditionsShowAll: TMenuItem;
-    EditionsUnDo: TMenuItem;
-    EditionsReDo: TMenuItem;
+    ClearScreen: TMenuItem;
+    DelSelected: TMenuItem;
     EditionsCls: TMenuItem;
     EditionsReplaseUp: TMenuItem;
     EditionsReplaseDown: TMenuItem;
     EditionsDel: TMenuItem;
+    MoveLower: TMenuItem;
+    MoveUpper: TMenuItem;
     ScaleSpin: TFloatSpinEdit;
     HorizontalScroll: TScrollBar;
     VerticalScroll: TScrollBar;
@@ -37,27 +39,22 @@ type
     TToolUnZoomLoupe: TSpeedButton;
     ToolsBar: TToolBar;
     AttributesBar: TToolBar;
-    procedure ActionClsExecute(Sender: TObject);
-    procedure ActionReDoExecute(Sender: TObject);
-    procedure ActionUnDoExecute(Sender: TObject);
     procedure DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure DrawAreaMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure DrawAreaMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure DrawAreaPaint(Sender: TObject);
-    procedure EditionsClsClick(Sender: TObject);
-    procedure EditionsDelClick(Sender: TObject);
-    procedure EditionsReDoClick(Sender: TObject);
-    procedure EditionsReplaseDownClick(Sender: TObject);
-    procedure EditionsReplaseUpClick(Sender: TObject);
+    procedure DelSelectedClick(Sender: TObject);
     procedure EditionsShowAllClick(Sender: TObject);
-    procedure EditionsUnDoClick(Sender: TObject);
+    procedure ClearScreenClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure BttnToolClck(Sender: TObject);
     procedure HorizontalScrollScroll(Sender: TObject; ScrollCode: TScrollCode;
       var ScrollPos: integer);
     procedure ItemProgCloseClick(Sender: TObject);
+    procedure MoveLowerClick(Sender: TObject);
+    procedure MoveUpperClick(Sender: TObject);
     procedure ScaleSpinChange(Sender: TObject);
     procedure TToolZoomLoupeClick(Sender: TObject);
     procedure TToolUnZoomLoupeClick(Sender: TObject);
@@ -115,22 +112,6 @@ begin
   ScaleSpin.MaxValue := MAX_ZOOM;
   ScaleSpin.MinValue := MIN_ZOOM / 100;
 
-end;
-
-
-procedure TVectGraph.ActionUnDoExecute(Sender: TObject);
-begin
-  EditionsUnDoClick(Sender);
-end;
-
-procedure TVectGraph.ActionReDoExecute(Sender: TObject);
-begin
-  EditionsReDoClick(Sender);
-end;
-
-procedure TVectGraph.ActionClsExecute(Sender: TObject);
-begin
-  EditionsClsClick(Sender);
 end;
 
 { MouseDown/Move/Up }
@@ -204,21 +185,7 @@ begin
 end;
 
 
-procedure TVectGraph.EditionsClsClick(Sender: TObject);
-var
-  i: integer;
-begin
-  for i := 0 to Length(FigureItems) - 1 do
-    FreeAndNil(FigureItems[i]);
-  for i := 0 to Length(History) - 1 do
-    FreeAndNil(History[i]);
-  SetLength(FigureItems, 0);
-  SetLength(History, 0);
-  ScrolCalc;
-  DrawArea.Invalidate;
-end;
-
-procedure TVectGraph.EditionsDelClick(Sender: TObject);
+procedure TVectGraph.DelSelectedClick(Sender: TObject);
 var
   i, j, k: integer;
 begin
@@ -242,62 +209,20 @@ begin
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.EditionsReDoClick(Sender: TObject);
-begin
-  if Length(History) > 0 then
-  begin
-    SetLength(FigureItems, Length(FigureItems) + 1);
-    FigureItems[High(FigureItems)] := History[High(History)];
-    SetLength(History, Length(History) - 1);
-    DrawArea.Invalidate;
-  end;
-end;
-
-procedure TVectGraph.EditionsReplaseDownClick(Sender: TObject);
+procedure TVectGraph.ClearScreenClick(Sender: TObject);
 var
-  i, j: integer;
+  i: integer;
 begin
-  for j := Length(FigureItems) - 1 downto 0 do
-  begin
-    i := j;
-    if FigureItems[j].IsSelected then
-      while i > 0 do
-      begin
-        Swap(FigureItems[i], FigureItems[i - 1]);
-        i -= 1;
-      end;
-    DrawArea.Invalidate;
-  end;
-end;
+  for i := 0 to Length(FigureItems) - 1 do
+    FreeAndNil(FigureItems[i]);
+  for i := 0 to Length(History) - 1 do
+    FreeAndNil(History[i]);
+  SetLength(FigureItems, 0);
+  SetLength(History, 0);
+  ScrolCalc;
 
-procedure TVectGraph.EditionsReplaseUpClick(Sender: TObject);
-var
-  i, j: integer;
-begin
-  for j := 0 to Length(FigureItems) - 1 do
-  begin
-    i := j;
-    if FigureItems[j].IsSelected then
-      while i < Length(FigureItems) - 1 do
-      begin
-        Swap(FigureItems[i], FigureItems[i + 1]);
-        i += 1;
-      end;
-    DrawArea.Invalidate;
-  end;
+  DrawArea.Invalidate;
 end;
-
-procedure TVectGraph.EditionsUnDoClick(Sender: TObject);
-begin
-  if Length(FigureItems) > 0 then
-  begin
-    SetLength(History, Length(History) + 1);
-    History[High(History)] := FigureItems[High(FigureItems)];
-    SetLength(FigureItems, Length(FigureItems) - 1);
-    DrawArea.Invalidate;
-  end;
-end;
-
 
 procedure TVectGraph.EditionsShowAllClick(Sender: TObject);
 begin
@@ -411,6 +336,40 @@ end;
 procedure TVectGraph.ItemProgCloseClick(Sender: TObject);
 begin
   VectGraph.Close;
+end;
+
+procedure TVectGraph.MoveLowerClick(Sender: TObject);
+var
+  i, j: integer;
+begin
+  for j := Length(FigureItems) - 1 downto 0 do
+  begin
+    i := j;
+    if FigureItems[j].IsSelected then
+      while i > 0 do
+      begin
+        Swap(FigureItems[i], FigureItems[i - 1]);
+        i -= 1;
+      end;
+    DrawArea.Invalidate;
+  end;
+end;
+
+procedure TVectGraph.MoveUpperClick(Sender: TObject);
+var
+  i, j: integer;
+begin
+  for j := 0 to Length(FigureItems) - 1 do
+  begin
+    i := j;
+    if FigureItems[j].IsSelected then
+      while i < Length(FigureItems) - 1 do
+      begin
+        Swap(FigureItems[i], FigureItems[i + 1]);
+        i += 1;
+      end;
+    DrawArea.Invalidate;
+  end;
 end;
 
 end.
