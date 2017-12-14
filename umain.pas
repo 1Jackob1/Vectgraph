@@ -145,7 +145,6 @@ begin
     for i := 0 to Length(FigureItems) - 1 do
       FigureItems[i].IsSelected := False;
     ForAllFigrStyles := CurrentStyles;
-    ;
     SetLength(History, 0);
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
@@ -309,11 +308,16 @@ begin
 end;
 
 procedure TVectGraph.BttnToolClck(Sender: TObject);
+var
+  i: integer;
 begin
   ToolCode := TSpeedButton(Sender).Tag;
   EditFigure.Destroy;
   EditFigure := TEditCreate.Create;
   EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
+  for i := 0 to Length(FigureItems) - 1 do
+    FigureItems[i].IsSelected := False;
+  DrawArea.Invalidate;
 end;
 
 procedure TVectGraph.HorizontalScrollScroll(Sender: TObject;

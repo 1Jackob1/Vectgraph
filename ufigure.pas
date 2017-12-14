@@ -24,7 +24,7 @@ type
     vert: array of TDoublePoint;
     IsSelected: boolean;
 
-    function checkSelecetion: Boolean;
+    function checkSelecetion: boolean;
     procedure MouseMove(ADPoint: TDoublePoint); virtual; abstract;
     procedure NextPoint(ADPoint: TDoublePoint); virtual; abstract;
     procedure MouseUp(ADPoint: TDoublePoint); virtual;
@@ -150,6 +150,7 @@ procedure Swap(var A, B: TFigure);
 var
   CurrentStyles, ForAllFigrStyles: Styles;
   SelectPoint, EndSelPoint: TPoint;
+  FigureItems, History: array of TFigure;
 
 implementation
 
@@ -200,9 +201,9 @@ begin
     IsSelected := True;
 end;
 
-function TFigure.checkSelecetion: Boolean;
+function TFigure.checkSelecetion: boolean;
 begin
-  Result:=IsSelected;
+  Result := IsSelected;
   exit;
 end;
 
@@ -267,12 +268,12 @@ end;
 
 procedure TSmlrRect.getFillColor(var AFillColor: TColor);
 begin
-  AFillColor:=FFillColor;
+  AFillColor := FFillColor;
 end;
 
 procedure TSmlrRect.getFillType(var AFillType: TFPBrushStyle);
 begin
-  AFillType:=FFillType;
+  AFillType := FFillType;
 end;
 
 { TRectangle }
@@ -320,7 +321,8 @@ begin
   inherited Draw(ACanvas, Selected);
   ACanvas.Ellipse(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)));
-  if Selected then Frame(ACanvas);
+  if Selected then
+    Frame(ACanvas);
 end;
 
 procedure TEllipse.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
@@ -347,8 +349,8 @@ end;
 procedure TPolyLine.Draw(ACanvas: TCanvas; Selected: boolean);
 var
   i: integer;
-  FPoint, SPoint: TPoint;
-  Offs: Integer;
+  FPoint, SPoint, FRPoint, SRPoint: TPoint;
+  Offs: integer;
 begin
   if Length(vert) = 0 then
     exit;
@@ -366,14 +368,17 @@ begin
     ACanvas.Line(FPoint, SPoint);
     if Selected then
     begin
-      with ACanvas do begin
-      Offs := Pen.Width div 2 + 5;
-      Pen.Width := 2;
-      Pen.Color := clBlack;
-      Pen.Style := psDash;
-      Brush.Style := bsClear;
+      with ACanvas do
+      begin
+        Offs := Pen.Width div 2 + 5;
+        Pen.Width := 2;
+        Pen.Color := clBlack;
+        Pen.Style := psDash;
+        Brush.Style := bsClear;
       end;
-      ACanvas.Rectangle(FPoint.X+Offs, FPoint.Y-Offs, SPoint.X-Offs, SPoint.Y+Offs);
+      SRPoint := objTransform.W2S(MaxPoint(Vert[i], Vert[i + 1]));
+      FRPoint := objTransform.W2S(MinPoint(Vert[i], Vert[i + 1]));
+      ACanvas.Rectangle(FRPoint.X - Offs, FRPoint.Y - Offs, SRPoint.X + Offs, SRPoint.Y + Offs);
     end;
     MinCoor := MinPoint(Vert[i], MinCoor);
     MaxCoor := MaxPoint(Vert[i], MaxCoor);

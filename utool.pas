@@ -102,7 +102,7 @@ type
   {TToolSelection}
 
   TToolSelection = class(TTool)
-    WasClick: Boolean;
+    WasClick: boolean;
     procedure MouseMove(APoint: TPoint); override;
     procedure MouseDown(APoint: TPoint); override;
     procedure MouseUp(APoint: TPoint); override;
@@ -120,7 +120,6 @@ type
 var
   ToolConst: TToolReg;
   tmpDP: TDoublePoint;
-  FigureItems, History: array of TFigure;
   Delete: boolean;
   tmpSwap: TFigure;
   SelectedCount: integer;
@@ -318,13 +317,13 @@ begin
   SetLength(FigureItems, Length(FigureItems) + 1);
   FigureItems[High(FigureItems)] := TSpecialRect.Create;
   SelectPoint := APoint;
-  WasClick:=True;
+  WasClick := True;
 end;
 
 procedure TToolSelection.MouseMove(APoint: TPoint);
 begin
   EndSelPoint := APoint;
-  WasClick:=False;
+  WasClick := False;
 end;
 
 procedure TToolSelection.MouseUp(APoint: TPoint);
@@ -332,17 +331,19 @@ var
   i: integer;
   tmpPoint: TPoint;
 begin
-  if WasClick then EndSelPoint:=SelectPoint;
+  if WasClick then
+    EndSelPoint := SelectPoint;
   SelectedCount := 0;
-  WasClick:=False;;
-  if(abs((SelectPoint.X - EndSelPoint.X) * (SelectPoint.Y - EndSelPoint.Y))<5) or
-  (EndSelPoint.X=0) or (EndSelPoint.Y = 0) then
+  WasClick := False;
+  ;
+  if (abs((SelectPoint.X - EndSelPoint.X) * (SelectPoint.Y - EndSelPoint.Y)) < 5) or
+    (EndSelPoint.X = 0) or (EndSelPoint.Y = 0) then
   begin
-    EndSelPoint.X-=2;
-    SelectPoint.X+=5;
-    EndSelPoint.Y-=2;
-    SelectPoint.Y+=5;
-    WasClick:=True;
+    EndSelPoint.X -= 2;
+    SelectPoint.X += 5;
+    EndSelPoint.Y -= 2;
+    SelectPoint.Y += 5;
+    WasClick := True;
   end;
   if (SelectPoint.X < EndSelPoint.X) then
   begin
@@ -384,7 +385,8 @@ begin
   end;
   EditSelectedFig;
   Delete := True;
-  if WasClick then SelectPoint:=EndSelPoint;
+  if WasClick then
+    SelectPoint := EndSelPoint;
 
 end;
 
