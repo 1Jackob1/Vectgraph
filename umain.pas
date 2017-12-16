@@ -184,25 +184,19 @@ end;
 
 procedure TVectGraph.DelSelectedClick(Sender: TObject);
 var
-  i, j, k: integer;
+  i, j: Integer;
 begin
-  for k := 0 to SelectedCount do
-  begin
-    for j := 0 to High(FigureItems) do
+  j := 0;
+  for i := 0 to High(FigureItems) do
     begin
-      i := j;
-      if (FigureItems[j] <> nil) and FigureItems[j].IsSelected then
-      begin
-        FreeAndNil(FigureItems[j]);
-        while i < High(FigureItems) do
-        begin
-          FigureItems[i] := FigureItems[i + 1];
-          i += 1;
-        end;
+      if (FigureItems[i].IsSelected) then
+        FreeAndNil(FigureItems[i])
+      else begin
+        FigureItems[j] := FigureItems[i];
+        j += 1;
       end;
     end;
-  end;
-  SetLength(FigureItems, Length(FigureItems) - SelectedCount);
+  setLength(FigureItems, j);
   DrawArea.Invalidate;
 end;
 
@@ -237,6 +231,7 @@ begin
     for i := 0 to Length(FigureItems) - 1 do
       FigureItems[i].IsSelected := False;
   DrawArea.Invalidate;
+
 end;
 
 procedure TVectGraph.HorizontalScrollScroll(Sender: TObject;
