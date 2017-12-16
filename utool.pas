@@ -131,7 +131,7 @@ var
 
 implementation
 
-uses UDraw, UMain;
+uses UDraw;
 
 { TTool }
 procedure TTool.MouseUp(APoint: TPoint);
@@ -226,7 +226,7 @@ end;
 
 procedure TToolRectangle.MouseUp(APoint: TPoint);
 begin
-  //FigureItems[High(FigureItems)].defineTopBot;
+  FigureItems[High(FigureItems)].defineTopBot;
   inherited MouseUp(APoint);
 end;
 
@@ -255,6 +255,7 @@ end;
 
 procedure TToolRoundRect.MouseUp(APoint: TPoint);
 begin
+  FigureItems[High(FigureItems)].defineTopBot;
   inherited MouseUp(APoint);
 end;
 
@@ -282,6 +283,7 @@ end;
 
 procedure TToolEllipse.MouseUp(APoint: TPoint);
 begin
+  FigureItems[High(FigureItems)].defineTopBot;
   inherited MouseUp(APoint);
 end;
 
@@ -438,18 +440,26 @@ function TToolResize.InAnchor(APoint: TPoint; AAnchros: Array of TPoint): Intege
 var
   i:Integer;
 begin
-  VectGraph.Caption := inttostr(AAnchros[0].x) + ' ' + inttostr(AAnchros[0].y);
-  for i:=0 to High(AAnchros) do
-    if((AAnchros[i]-10<=APoint) and (AAnchros[i]+10>=APoint))then begin
-    Result:=i;
+  if Length(AAnchros)=4 then begin
+    for i:=0 to High(AAnchros) do
+      if((AAnchros[i]-10<=APoint) and (AAnchros[i]+10>=APoint))then begin
+      Result:=i;
+      exit;
+    end;
+    if((AAnchros[0]-10<=APoint) and (AAnchros[2]+10>=APoint))then begin
+      Result:=4;
+      exit;
+    end;
+    Result:=-1;
     exit;
+  end else begin
+     for i:=0 to High(AAnchros) do
+      if((AAnchros[i]-10<=APoint) and (AAnchros[i]+10>=APoint))then begin
+      Result:=i;
+      exit;
+      end
+      else result:=-1;
   end;
-  if((AAnchros[0]-10<=APoint) and (AAnchros[2]+10>=APoint))then begin
-    Result:=4;
-    exit;
-  end;
-  Result:=-1;
-  exit;
 end;
 
 { TToolReg }

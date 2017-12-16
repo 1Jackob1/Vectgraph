@@ -128,7 +128,9 @@ type
     procedure selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoublePoint);
       override;
     procedure NextLine(ADPoint: TDoublePoint);
-    procedure DrawFrame(ACanvas: TCanvas; FAPoint, SAPoint: TPoint);
+    procedure DrawFrame(ACanvas: TCanvas; FAPoint, SAPoint: TPoint; AVert: Array of TDoublePoint);
+    procedure changePoint(FADPoint, SADPoint: TDoublePoint; Code: Integer); override;
+    procedure defineTopBot; override;
   published
     property FLineType: TFPPenStyle read LineType write LineType;
     property FLineWidth: integer read LineWidth write LineWidth;
@@ -400,7 +402,7 @@ begin
     begin
       SRPoint := objTransform.W2S(MaxCoor);
       FRPoint := objTransform.W2S(MinCoor);
-      DrawFrame(ACanvas,FRPoint,SRPoint);
+      DrawFrame(ACanvas,FRPoint,SRPoint,vert);
     end;
 
 end;
@@ -428,12 +430,12 @@ begin
   end;
 end;
 
-procedure TPolyLine.DrawFrame(ACanvas: TCanvas; FAPoint, SAPoint: TPoint);
+procedure TPolyLine.DrawFrame(ACanvas: TCanvas; FAPoint, SAPoint: TPoint; AVert: Array of TDoublePoint);
 var
   Offs: Integer;
   i:Integer;
 begin
-  SetLength(Anchros,4);
+  SetLength(Anchros,Length(AVert));
   with ACanvas do
   begin
     Offs := Pen.Width div 2 + 5;
@@ -443,16 +445,38 @@ begin
     Brush.Style := bsClear;
   end;
   ACanvas.Rectangle(FAPoint.X - Offs, FAPoint.Y - Offs, SAPoint.X + Offs, SAPoint.Y + Offs);
-  Anchros[0]:=FAPoint;
-  Anchros[1].X:=SAPoint.X;
-  Anchros[1].Y:=FAPoint.Y;
-  Anchros[2]:=SAPoint;
-  Anchros[3].X:=FAPoint.X;
-  Anchros[3].Y:=SAPoint.Y;
+  for i:=0 to High(AVert) do Anchros[i]:=objTransform.W2S(AVert[i]);
   ACanvas.Brush.Style := bsSolid;
   ACanvas.Brush.Color:=clWhite;
-  for i:=0 to 3 do
-    ACanvas.Rectangle(Anchros[i].x-10, Anchros[i].y-10,Anchros[i].x+10, Anchros[i].y+10);
+  for i:=0 to High(AVert) do
+    ACanvas.Rectangle(Anchros[i].x-5, Anchros[i].y-5,Anchros[i].x+5, Anchros[i].y+5);
+end;
+
+procedure TPolyLine.changePoint(FADPoint, SADPoint: TDoublePoint; Code: Integer);
+var
+  i: integer;
+  vertsize: integer;
+begin
+  vertsize:=High(vert);
+  case Code of
+  -1: begin
+    if((FADPoint<=MaxCoor) and (FADPoint>=MinCoor) ) then
+      for i:=0 to high(vert) do begin
+      vert[i].X -=SADPoint.X-FADPoint.X;
+      vert[i].Y -=SADPoint.Y-FADPoint.Y;
+      end;
+  end;
+  else begin
+       if (Code >= 0) and (code<=vertsize) then begin
+          vert[code]:=FADPoint;
+       end;
+    end;
+  end;
+end;
+
+procedure TPolyLine.defineTopBot;
+begin
+
 end;
 
 {TSpecialRect}
