@@ -25,17 +25,18 @@ type
     IsSelected: boolean;
     Anchros:array of TPoint;
     function checkSelecetion: boolean;
-    procedure changePoint(ADPoint: TDoublePoint; Code: Integer); virtual;
+    procedure changePoint(FADPoint, SADPoint: TDoublePoint; Code: Integer); virtual; abstract;
     procedure MouseMove(ADPoint: TDoublePoint); virtual; abstract;
     procedure NextPoint(ADPoint: TDoublePoint); virtual; abstract;
-    procedure MouseUp(ADPoint: TDoublePoint); virtual;
+    procedure MouseUp(ADPoint: TDoublePoint); virtual; abstract;
     procedure Draw(ACanvas: TCanvas; Selected: boolean); virtual; abstract;
     procedure SetDefFigrStyles(Selected: boolean);
     procedure selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint); virtual;
     procedure selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoublePoint);
       virtual; abstract;
-    procedure getFillColor(var AFillColor: TColor); virtual;
-    procedure getFillType(var AFillType: TFPBrushStyle); virtual;
+    procedure defineTopBot;virtual; abstract;
+    procedure getFillColor(var AFillColor: TColor); virtual; abstract;
+    procedure getFillType(var AFillType: TFPBrushStyle); virtual; abstract;
     property FLineWidth: integer read LineWidth write LineWidth;
     property FLineColor: TColor read LineColor write LineColor;
     property FLineType: TFPPenStyle read LineType write LineType;
@@ -50,9 +51,6 @@ type
   TSmlrRect = class(TFigure)
   private
     DPRect: TDRect;
-    //Anchros: TFigure;
-    //RFillType: TFPBrushStyle;
-    //RFillColor: TColor;
   public
     Offs: integer;
     procedure NextPoint(ADPoint: TDoublePoint); override;
@@ -62,8 +60,8 @@ type
     procedure Frame(ACanvas: TCanvas);
     procedure getFillColor(var AFillColor: TColor); override;
     procedure getFillType(var AFillType: TFPBrushStyle); override;
-    procedure changePoint(ADPoint: TDoublePoint; Code: Integer); override;
-
+    procedure changePoint(FADPoint, SADPoint: TDoublePoint; Code: Integer); override;
+    procedure defineTopBot; override;
     property FFillColor: TColor read RFillColor write RFillColor;
     property FFillType: TFPBrushStyle read RFillType write RFillType;
     property FLineColor: TColor read LineColor write LineColor;
@@ -77,8 +75,6 @@ type
   public
     constructor Create;
     procedure Draw(ACanvas: TCanvas; Selected: boolean); override;
-    //procedure getFillColor(var AFillColor: TColor); override;
-    //procedure getFillColor(var AFillType: TFPBrushStyle); override;
   published
     property FLineType: TFPPenStyle read LineType write LineType;
     property FFillType: TFPBrushStyle read RFillType write RFillType;
@@ -95,8 +91,6 @@ type
   public
     constructor Create;
     procedure Draw(ACanvas: TCanvas; Selected: boolean); override;
-    //procedure getFillColor(var AFillColor: TColor); override;
-    //procedure getFillColor(var AFillType: TFPBrushStyle); override;
   published
     property FLineType: TFPPenStyle read LineType write LineType;
     property FFillType: TFPBrushStyle read RFillType write RFillType;
@@ -167,14 +161,9 @@ begin
   B := t;
 end;
 
-procedure TFigure.MouseUp(ADPoint: TDoublePoint);
-begin
-end;
 
 procedure TFigure.SetDefFigrStyles(Selected: boolean);
 begin
-  //MaxCoor:=ToDP(0.0,0.0);
-  //MinCoor:=ToDP(99999999999.9,99999999999.9);
   LineWidth := FLineWidth;
   LineColor := FLineColor;
   LineType := FLineType;
@@ -212,20 +201,6 @@ begin
   exit;
 end;
 
-procedure TFigure.getFillColor(var AFillColor: TColor);
-begin
-
-end;
-
-procedure TFigure.getFillType(var AFillType: TFPBrushStyle);
-begin
-
-end;
-
-procedure TFigure.changePoint(ADpoint: TDoublePoint; Code: Integer);
-begin
-
-end;
 
 { TSmlrRect }
 
@@ -272,11 +247,8 @@ begin
     Pen.Style := psDash;
     Brush.Style := bsClear;
   end;
-  SelPoints[0]:=objTransform.W2S(DPRect.Top)- 2 - Offs;
-  SelPoints[1]:=objTransform.W2S(DPRect.Bottom)+ 2 + Offs;
-  ACanvas.Rectangle(
-    SelPoints[0].x, SelPoints[0].y,
-    SelPoints[1].x, SelPoints[1].y);
+  SelPoints[0]:=objTransform.W2S(DPRect.Top);
+  SelPoints[1]:=objTransform.W2S(DPRect.Bottom);
   Anchros[0]:=SelPoints[0];
   Anchros[1].X:=SelPoints[1].X;
   Anchros[1].Y:=SelPoints[0].Y;
@@ -301,11 +273,32 @@ begin
   AFillType := FFillType;
 end;
 
-procedure TSmlrRect.changePoint(ADPoint: TDoublePoint; Code: Integer);
+procedure TSmlrRect.changePoint(FADPoint, SADPoint: TDoublePoint; Code: Integer);
 begin
   case Code of
-  0: DPRect.Top:=ADPoint;
+  0: DPRect.Top:=FADPoint;
+  1: begin
+    DPRect.Bottom.X:=FADPoint.X;
+    DPRect.Top.Y:=FADPoint.Y;
+    end;
+  2: DPRect.Bottom:=FADPoint;
+  3: begin
+    DPRect.Top.X:=FADPoint.X;
+    DPRect.Bottom.Y:=FADPoint.Y;
+    end;
+  4:begin
+     DPRect.Top.X-=SADPoint.X-FADPoint.X;
+     DPRect.Top.Y-=SADPoint.Y-FADPoint.Y;
+     DPRect.Bottom.X-=SADPoint.X-FADPoint.X;
+     DPRect.Bottom.Y-=SADPoint.Y-FADPoint.Y;
   end;
+  end;
+end;
+
+procedure TSmlrRect.defineTopBot;
+begin
+  DPRect.Bottom := MaxCoor;
+  DPRect.Top := MinCoor;
 end;
 
 { TRectangle }
@@ -316,18 +309,14 @@ begin
 end;
 
 procedure TRectangle.Draw(ACanvas: TCanvas; Selected: boolean);
-var
-a,b:TPoint;
 begin
   inherited Draw(ACanvas, Selected);
   ACanvas.Rectangle(ToRect(objTransform.W2S(DPRect.Top),
     objTransform.W2S(DPRect.Bottom)));
-    //a:=objTransform.W2S(MaxCoor);
-    //b:=objTransform.W2S(MinCoor);
-    //ACanvas.Rectangle(b.X,b.Y,a.X,a.Y);
   Offs := FLineWidth;
   if Selected then
     Frame(ACanvas);
+
 end;
 
 { TRoundRect }

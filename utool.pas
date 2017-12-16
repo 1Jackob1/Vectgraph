@@ -103,6 +103,7 @@ type
 
   TToolSelection = class(TTool)
     WasClick: boolean;
+
     procedure MouseMove(APoint: TPoint); override;
     procedure MouseDown(APoint: TPoint); override;
     procedure MouseUp(APoint: TPoint); override;
@@ -112,6 +113,8 @@ type
 
   TToolResize = class(TTool)
     tmpP: TPoint;
+    wasSelection: boolean;
+    AnchorCode, FigrNum: Integer;
     procedure MouseMove(APoint: TPoint); override;
     procedure MouseDown(APoint: TPoint); override;
     procedure MouseUp(APoint: TPoint); override;
@@ -128,11 +131,12 @@ var
 
 implementation
 
-uses UDRaw;
+uses UDraw, UMain;
 
 { TTool }
 procedure TTool.MouseUp(APoint: TPoint);
 begin
+
 end;
 
 function TTool.CreateAttributes: TPersistent;
@@ -222,6 +226,7 @@ end;
 
 procedure TToolRectangle.MouseUp(APoint: TPoint);
 begin
+  //FigureItems[High(FigureItems)].defineTopBot;
   inherited MouseUp(APoint);
 end;
 
@@ -395,40 +400,52 @@ end;
 { TToolResize }
 
 procedure TToolResize.MouseDown(Apoint: TPoint);
+var
+  i: Integer;
 begin
   tmpP := APoint;
-end;
-
-procedure TToolResize.MouseMove(APoint: TPoint);
-var
-  i, j, k, _j: integer;
-begin
+  wasSelection:=false;
   for i := 0 to High(FigureItems) do
   begin
     if FigureItems[i].IsSelected then begin
-      j:=InAnchor(tmpP, FigureItems[i].Anchros);
-      k:=i;
+      AnchorCode:=InAnchor(APoint, FigureItems[i].Anchros);
+      FigrNum:=i;
+      wasSelection:=true;
+      if AnchorCode <> -1 then break;
     end;
   end;
-  FigureItems[k].changePoint(objTransform.S2W(APoint),j);
+end;
+
+procedure TToolResize.MouseMove(APoint: TPoint);
+begin
+  if wasSelection then FigureItems[FigrNum].changePoint(objTransform.S2W(APoint),
+                                              objTransform.S2W(tmpP),AnchorCode);
+  tmpP:=APoint;
 end;
 
 procedure TToolResize.MouseUp(Apoint: TPoint);
+var
+  i: integer;
 begin
-
+  for i:=0 to High(FigureItems) do
+  begin
+     if FigureItems[i].IsSelected then
+       FigureItems[i].defineTopBot;
+  end;
 end;
 
 function TToolResize.InAnchor(APoint: TPoint; AAnchros: Array of TPoint): Integer;
 var
   i:Integer;
 begin
+  VectGraph.Caption := inttostr(AAnchros[0].x) + ' ' + inttostr(AAnchros[0].y);
   for i:=0 to High(AAnchros) do
     if((AAnchros[i]-10<=APoint) and (AAnchros[i]+10>=APoint))then begin
     Result:=i;
     exit;
   end;
   if((AAnchros[0]-10<=APoint) and (AAnchros[2]+10>=APoint))then begin
-    Result:=5;
+    Result:=4;
     exit;
   end;
   Result:=-1;
