@@ -26,6 +26,7 @@ operator >= (AFPoint, ASPoint: TDoublePoint): boolean;
 operator <= (AFPoint, ASPoint: TDoublePoint): boolean;
 operator - (APoint: TPoint; AInt: Integer): TPoint;
 operator + (APoint: TPoint; AInt: Integer): TPoint;
+operator <> (AFPoint, ASPoint: TDoublePoint): boolean;
 
 implementation
 
@@ -103,6 +104,11 @@ operator + (APoint: TPoint; AInt: Integer): TPoint;
 begin
   Result.X:=APoint.X+AInt;
   Result.Y:=APoint.Y+AInt;
+end;
+
+operator <> (AFPoint, ASPoint: TDoublePoint): boolean;
+begin
+  Result:=((AFPoint.X <> ASPoint.X) and (AFPoint.Y <> ASPoint.Y));
 end;
 
 end.

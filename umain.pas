@@ -30,8 +30,12 @@ type
     EditionsReplaseUp: TMenuItem;
     EditionsReplaseDown: TMenuItem;
     EditionsDel: TMenuItem;
+    Save: TMenuItem;
+    Open: TMenuItem;
     MoveLower: TMenuItem;
     MoveUpper: TMenuItem;
+    OpenDialog1: TOpenDialog;
+    SaveDialog1: TSaveDialog;
     ScaleSpin: TFloatSpinEdit;
     HorizontalScroll: TScrollBar;
     VerticalScroll: TScrollBar;
@@ -55,6 +59,8 @@ type
     procedure ItemProgCloseClick(Sender: TObject);
     procedure MoveLowerClick(Sender: TObject);
     procedure MoveUpperClick(Sender: TObject);
+    procedure OpenClick(Sender: TObject);
+    procedure SaveClick(Sender: TObject);
     procedure ScaleSpinChange(Sender: TObject);
     procedure TToolZoomLoupeClick(Sender: TObject);
     procedure TToolUnZoomLoupeClick(Sender: TObject);
@@ -358,6 +364,30 @@ begin
         i += 1;
       end;
     DrawArea.Invalidate;
+  end;
+end;
+
+procedure TVectGraph.OpenClick(Sender: TObject);
+begin
+
+end;
+
+procedure TVectGraph.SaveClick(Sender: TObject);
+var
+  i: TFigure;
+  TFile: Text;
+begin
+  if SaveDialog1.Execute then begin
+     AssignFile(TFile, SaveDialog1.FileName);
+     Rewrite(TFile);
+     Write(TFile,'{"Count": ', Length(FigureItems),',');
+     Write(TFile,'"Items":[');
+     for i in FigureItems do begin
+      i.saveFigure(TFile,i.ClassName);
+      if i <> FigureItems[High(FigureItems)] then write(TFile,',');
+     end;
+     Write(TFile,']}');
+     CloseFile(TFile);
   end;
 end;
 

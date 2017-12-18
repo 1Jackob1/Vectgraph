@@ -513,6 +513,14 @@ object VectGraph: TVectGraph
         Caption = 'Закрыть'
         OnClick = ItemProgCloseClick
       end
+      object Open: TMenuItem
+        Caption = 'Открыть'
+        OnClick = OpenClick
+      end
+      object Save: TMenuItem
+        Caption = 'Сохранить'
+        OnClick = SaveClick
+      end
     end
     object Editions: TMenuItem
       Caption = 'Редактирование'
@@ -537,5 +545,13 @@ object VectGraph: TVectGraph
         OnClick = MoveLowerClick
       end
     end
+  end
+  object SaveDialog1: TSaveDialog
+    left = 184
+    top = 56
+  end
+  object OpenDialog1: TOpenDialog
+    left = 224
+    top = 56
   end
 end
