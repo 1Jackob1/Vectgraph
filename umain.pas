@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, FPCanvas, UTool,
-  UTransform, UComparator, UDefine, UCreateAttributes, UFigure;
+  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, FPCanvas, fpjson,
+  UTool, UTransform, UComparator, UDefine, UCreateAttributes, UFigure;
 
 type
 
@@ -190,18 +190,19 @@ end;
 
 procedure TVectGraph.DelSelectedClick(Sender: TObject);
 var
-  i, j: Integer;
+  i, j: integer;
 begin
   j := 0;
   for i := 0 to High(FigureItems) do
+  begin
+    if (FigureItems[i].IsSelected) then
+      FreeAndNil(FigureItems[i])
+    else
     begin
-      if (FigureItems[i].IsSelected) then
-        FreeAndNil(FigureItems[i])
-      else begin
-        FigureItems[j] := FigureItems[i];
-        j += 1;
-      end;
+      FigureItems[j] := FigureItems[i];
+      j += 1;
     end;
+  end;
   setLength(FigureItems, j);
   DrawArea.Invalidate;
 end;
@@ -233,7 +234,7 @@ begin
   EditFigure.Destroy;
   EditFigure := TEditCreate.Create;
   EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
-  if ToolCode<>High(ToolConst.Tools) then
+  if ToolCode <> High(ToolConst.Tools) then
     for i := 0 to Length(FigureItems) - 1 do
       FigureItems[i].IsSelected := False;
   DrawArea.Invalidate;
@@ -368,7 +369,96 @@ begin
 end;
 
 procedure TVectGraph.OpenClick(Sender: TObject);
+var
+  jData: TJSONData;
+  TFile: Text;
+  Point: TPoint;
+  i, j: integer;
+  Data: string;
 begin
+  if OpenDialog1.Execute then
+  begin
+    AssignFile(TFile, OpenDialog1.FileName);
+    Reset(TFile);
+    Read(TFile, Data);
+    CloseFile(TFile);
+    try
+      jData := GetJSON(Data);
+    except
+      ShowMessage('Файл поврежден!#10#13 Загрузка не удалась.');
+      Exit;
+    end;
+  end;
+  SetLength(FigureItems, 0);
+  for i := 0 to jData.FindPath('Count').AsInteger - 1 do
+  begin
+    SetLength(FigureItems, Length(FigureItems) + 1);
+    Data := 'Items[' + IntToStr(i) + '].Class';
+    case jData.FindPath(Data).AsString of
+      'TRectangle', 'TEllipse', 'TRoundRect':
+      begin
+        case jData.FindPath(Data).AsString of
+          'TRectangle': FigureItems[High(FigureItems)] := TRectangle.Create;
+          'TEllipse': FigureItems[High(FigureItems)] := TEllipse.Create;
+          'TRoundRect': FigureItems[High(FigureItems)] := TRoundRect.Create;
+        end;
+        with FigureItems[High(FigureItems)] do
+        begin
+          Data := 'Items[' + IntToStr(i) + '].LineWidth';
+          FLineWidth := jData.FindPath(Data).AsInteger;
+          Data := 'Items[' + IntToStr(i) + '].LineColor';
+          FLineColor := jData.FindPath(Data).AsInteger;
+          Data := 'Items[' + IntToStr(i) + '].LineType';
+          FLineType := TFPPenStyle(jData.FindPath(Data).AsInteger);
+          Data := 'Items[' + IntToStr(i) + '].FillColor';
+          FFillColor := jData.FindPath(Data).AsInteger;
+          Data := 'Items[' + IntToStr(i) + '].FillType';
+          FFillType := TFPBrushStyle(jData.FindPath(Data).AsInteger);
+          if ClassName = 'TRoundRect' then
+          begin
+            Data := 'Items[' + IntToStr(i) + '].Flexure';
+            FFlexure := jData.FindPath(Data).AsInteger;
+          end;
+          Data := 'Items[' + IntToStr(i) + '].Bot[0]';
+          Point.X := jData.FindPath(Data).AsInteger;
+          Data := 'Items[' + IntToStr(i) + '].Bot[1]';
+          Point.Y := jData.FindPath(Data).AsInteger;
+          MaxCoor := objTransform.S2W(Point);
+          Data := 'Items[' + IntToStr(i) + '].Top[0]';
+          Point.X := jData.FindPath(Data).AsInteger;
+          Data := 'Items[' + IntToStr(i) + '].Top[1]';
+          Point.Y := jData.FindPath(Data).AsInteger;
+          MinCoor := objTransform.S2W(Point);
+          defineTopBot;
+        end;
+      end;
+      'TPolyLine':
+      begin
+        FigureItems[High(FigureItems)] := TPolyLine.Create;
+        with FigureItems[High(FigureItems)] do
+        begin
+          Data := 'Items[' + IntToStr(i) + '].LineWidth';
+          FLineWidth := jData.FindPath(Data).AsInteger;
+          Data := 'Items[' + IntToStr(i) + '].LineColor';
+          FLineColor := jData.FindPath(Data).AsInteger;
+          Data := 'Items[' + IntToStr(i) + '].LineType';
+          FLineType := TFPPenStyle(jData.FindPath(Data).AsInteger);
+          Data := 'Items[' + IntToStr(i) + '].VertexesCount';
+          for j := 0 to jData.FindPath(Data).AsInteger-1 do
+          begin
+            SetLength(vert,Length(vert)+1);
+            Data := 'Items[' + IntToStr(i) + '].Vertexes['+IntToStr(j*2)+']';
+            Point.X:=jData.FindPath(Data).AsInteger;
+            Data := 'Items[' + IntToStr(i) + '].Vertexes['+IntToStr(j*2+1)+']';
+            Point.Y:=jData.FindPath(Data).AsInteger;
+            vert[j]:=objTransform.S2W(Point);
+          end;
+        end;
+      end;
+    end;
+  end;
+  jData.Free;
+  DrawArea.Invalidate;
 
 end;
 
@@ -377,17 +467,20 @@ var
   i: TFigure;
   TFile: Text;
 begin
-  if SaveDialog1.Execute then begin
-     AssignFile(TFile, SaveDialog1.FileName);
-     Rewrite(TFile);
-     Write(TFile,'{"Count": ', Length(FigureItems),',');
-     Write(TFile,'"Items":[');
-     for i in FigureItems do begin
-      i.saveFigure(TFile,i.ClassName);
-      if i <> FigureItems[High(FigureItems)] then write(TFile,',');
-     end;
-     Write(TFile,']}');
-     CloseFile(TFile);
+  if SaveDialog1.Execute then
+  begin
+    AssignFile(TFile, SaveDialog1.FileName);
+    Rewrite(TFile);
+    Write(TFile, '{"Count": ', Length(FigureItems), ',');
+    Write(TFile, '"Items":[');
+    for i in FigureItems do
+    begin
+      i.saveFigure(TFile, i.ClassName);
+      if i <> FigureItems[High(FigureItems)] then
+        Write(TFile, ',');
+    end;
+    Write(TFile, ']}');
+    CloseFile(TFile);
   end;
 end;
 
