@@ -215,7 +215,7 @@ var
 begin
   Write(JText,'{"Class": "',ClassName,'",');
   Write(JText,'"LineWidth": ', FLineWidth,',');
-  Write(JText,'"LineColor": "', ColorToString(FLineColor),'",');
+  Write(JText,'"LineColor": ', ColorToRGB(FLineColor),',');
   Write(JText,'"LineType" : ', Integer(FLineType),',' );
   Write(JText,'"VertexesCount":',Length(Vert),',');
   Write(JText,'"Vertexes" :[');
@@ -338,10 +338,10 @@ function TSmlrRect.saveFigure(var JText: Text; _ClassName: String): String;
 begin
   Write(JText,'{"Class": "', ClassName,'",');
   Write(JText,'"LineWidth": ', FLineWidth,',');
-  Write(JText,'"LineColor": "', ColorToString(FLineColor),'",');
+  Write(JText,'"LineColor": ', ColorToRGB(FLineColor),',');
   Write(JText,'"LineType" : ', Integer(FLineType),',' );
-  Write(JText,'"FillColor":"',ColorToString(FFillColor),'",');
-  Write(JText,'"FillType" :"', Integer(FFillType),'",');
+  Write(JText,'"FillColor": ',ColorToRGB(FFillColor),',');
+  Write(JText,'"FillType" : ', Integer(FFillType),',');
   if _ClassName = 'TRoundRect' then Write(JText,'"Flexure" : ', FFlexure,',');
   Write(JText,'"Bot":[',objTransform.W2S(MaxCoor).X,',', objTransform.W2S(MaxCoor).Y,'],');
   Write(JText,'"Top":[',objTransform.W2S(MinCoor).X,',', objTransform.W2S(MinCoor).Y,']}');
