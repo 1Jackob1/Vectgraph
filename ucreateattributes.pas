@@ -144,7 +144,7 @@ begin
   NameOfAttr.Width := Round(VectGraph.AttributesBar.Width / 2) - 5;
   NameOfAttr.Top := VectGraph.AttributesBar.Tag + 4;
   NameOfAttr.Left := 2;
-  VectGraph.AttributesBar.Tag := VectGraph.AttributesBar.Tag + 20;
+  VectGraph.AttributesBar.Tag := VectGraph.AttributesBar.Tag + 30;
 end;
 
 procedure TFigureAttr.OnChange(Sender: TObject);
@@ -262,6 +262,7 @@ begin
   inherited Create(AObjs, AAboutAttr, defProp);
   LineStyleComboBox := TComboBox.Create(VectGraph.AttributesBar);
   LineStyleComboBox.Parent := VectGraph.AttributesBar;
+  LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
   LineStyleComboBox.Left := trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
   LineStyleComboBox.Width := trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
   for i := 0 to Length(LineStyles) - 1 do
@@ -269,7 +270,8 @@ begin
   LineStyleComboBox.OnChange := @OnChange;
   LineStyleComboBox.ReadOnly := True;
   LineStyleComboBox.ItemIndex := CurrentStyles.LineStyleNum;
-  LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
+  //LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
+  VectGraph.AttributesBar.Tag:=VectGraph.AttributesBar.Tag+10;
   ReBuild;
 end;
 
@@ -326,6 +328,7 @@ begin
   inherited Create(AObjs, AAboutAttr, defProp);
   BrushStyleComboBox := TComboBox.Create(nil);
   BrushStyleComboBox.Parent := VectGraph.AttributesBar;
+  BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
   BrushStyleComboBox.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
   BrushStyleComboBox.Width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
   for i := 0 to Length(FillStyles) - 1 do
@@ -333,7 +336,8 @@ begin
   BrushStyleComboBox.OnChange := @OnChange;
   BrushStyleComboBox.Style := csOwnerDrawFixed;
   BrushStyleComboBox.ReadOnly := True;
-  BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
+  //BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
+  VectGraph.AttributesBar.tag:=VectGraph.AttributesBar.Tag+10;
   BrushStyleComboBox.ItemIndex := CurrentStyles.FillStyleNum;
   ReBuild;
 end;
@@ -395,10 +399,11 @@ begin
   DSpin.MinValue := 1;
   DSpin.MaxValue := 100;
   DSpin.parent := VectGraph.AttributesBar;
+  DSpin.Top := VectGraph.AttributesBar.Tag;
   DSpin.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
   DSpin.Width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
   DSpin.OnChange := @OnChange;
-  DSpin.Top := VectGraph.AttributesBar.Tag;
+  VectGraph.AttributesBar.Tag:=VectGraph.AttributesBar.Tag + 10;
   if AboutAttr^.Name = 'FLineWidth' then
   begin
     DSpin.Value := CurrentStyles.LineWidth;

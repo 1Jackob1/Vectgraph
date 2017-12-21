@@ -114,9 +114,9 @@ begin
 
   objTransform := TTransform.Create(DrawArea.Width, DrawArea.Height);
   EditFigure := TEditCreate.Create;
-  EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[0].CreateAttributes));
   ScaleSpin.MaxValue := MAX_ZOOM;
   ScaleSpin.MinValue := MIN_ZOOM / 100;
+  DrawArea.Invalidate;
 
 end;
 
@@ -130,7 +130,7 @@ begin
     if ToolCode <> High(ToolConst.Tools) then
       for i := 0 to Length(FigureItems) - 1 do
         FigureItems[i].IsSelected := False;
-    ForAllFigrStyles := CurrentStyles;
+    //ForAllFigrStyles := CurrentStyles;
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
   end;
@@ -220,7 +220,7 @@ end;
 
 procedure TVectGraph.EditionsShowAllClick(Sender: TObject);
 begin
-  objTransform.RegionLoupe(DrawArea.Height, DrawArea.Width,
+  objTransform.RegionLoupe(DrawArea.Width, DrawArea.Height,
     ToRect(objTransform.W2S(MaxDACoor), objTransform.W2S(MinDACoor)));
   ScaleSpin.Value := objTransform.Zoom;
   DrawArea.Invalidate;
@@ -444,14 +444,14 @@ begin
           Data := 'Items[' + IntToStr(i) + '].LineType';
           FLineType := TFPPenStyle(jData.FindPath(Data).AsInteger);
           Data := 'Items[' + IntToStr(i) + '].VertexesCount';
-          for j := 0 to jData.FindPath(Data).AsInteger-1 do
+          for j := 0 to jData.FindPath(Data).AsInteger - 1 do
           begin
-            SetLength(vert,Length(vert)+1);
-            Data := 'Items[' + IntToStr(i) + '].Vertexes['+IntToStr(j*2)+']';
-            Point.X:=jData.FindPath(Data).AsInteger;
-            Data := 'Items[' + IntToStr(i) + '].Vertexes['+IntToStr(j*2+1)+']';
-            Point.Y:=jData.FindPath(Data).AsInteger;
-            vert[j]:=objTransform.S2W(Point);
+            SetLength(vert, Length(vert) + 1);
+            Data := 'Items[' + IntToStr(i) + '].Vertexes[' + IntToStr(j * 2) + ']';
+            Point.X := jData.FindPath(Data).AsInteger;
+            Data := 'Items[' + IntToStr(i) + '].Vertexes[' + IntToStr(j * 2 + 1) + ']';
+            Point.Y := jData.FindPath(Data).AsInteger;
+            vert[j] := objTransform.S2W(Point);
           end;
         end;
       end;
