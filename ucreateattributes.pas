@@ -139,17 +139,17 @@ begin
     Objs[i] := AObjs[i];
   AboutAttr := AAboutAttr;
   NameOfAttr := TLabel.Create(nil);
-  NameOfAttr.Parent := VectGraph.AttributesBar;
+  NameOfAttr.Parent := Small_Editor.AttributesBar;
   NameOfAttr.Caption := Attrnames.Values[AboutAttr^.Name];
-  NameOfAttr.Width := Round(VectGraph.AttributesBar.Width / 2) - 5;
-  NameOfAttr.Top := VectGraph.AttributesBar.Tag + 4;
+  NameOfAttr.Width := Round(Small_Editor.AttributesBar.Width / 2) - 5;
+  NameOfAttr.Top := Small_Editor.AttributesBar.Tag + 4;
   NameOfAttr.Left := 2;
-  VectGraph.AttributesBar.Tag := VectGraph.AttributesBar.Tag + 30;
+  Small_Editor.AttributesBar.Tag := Small_Editor.AttributesBar.Tag + 30;
 end;
 
 procedure TFigureAttr.OnChange(Sender: TObject);
 begin
-  VectGraph.DrawArea.Invalidate;
+  Small_Editor.DrawArea.Invalidate;
 end;
 
 destructor TFigureAttr.Destroy;
@@ -260,18 +260,18 @@ var
   i: integer;
 begin
   inherited Create(AObjs, AAboutAttr, defProp);
-  LineStyleComboBox := TComboBox.Create(VectGraph.AttributesBar);
-  LineStyleComboBox.Parent := VectGraph.AttributesBar;
-  LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
-  LineStyleComboBox.Left := trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  LineStyleComboBox.Width := trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
+  LineStyleComboBox := TComboBox.Create(Small_Editor.AttributesBar);
+  LineStyleComboBox.Parent := Small_Editor.AttributesBar;
+  LineStyleComboBox.Top := Small_Editor.AttributesBar.Tag;
+  LineStyleComboBox.Left := trunc(Small_Editor.AttributesBar.Width * 0.5) + 2;
+  LineStyleComboBox.Width := trunc(Small_Editor.AttributesBar.Width * 0.5) - 4;
   for i := 0 to Length(LineStyles) - 1 do
     LineStyleComboBox.Items.Add(LineStyles[i]._Type);
   LineStyleComboBox.OnChange := @OnChange;
   LineStyleComboBox.ReadOnly := True;
   LineStyleComboBox.ItemIndex := CurrentStyles.LineStyleNum;
-  //LineStyleComboBox.Top := VectGraph.AttributesBar.Tag;
-  VectGraph.AttributesBar.Tag:=VectGraph.AttributesBar.Tag+10;
+  //LineStyleComboBox.Top := Small_Editor.AttributesBar.Tag;
+  Small_Editor.AttributesBar.Tag:=Small_Editor.AttributesBar.Tag+10;
   ReBuild;
 end;
 
@@ -327,17 +327,17 @@ var
 begin
   inherited Create(AObjs, AAboutAttr, defProp);
   BrushStyleComboBox := TComboBox.Create(nil);
-  BrushStyleComboBox.Parent := VectGraph.AttributesBar;
-  BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
-  BrushStyleComboBox.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  BrushStyleComboBox.Width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
+  BrushStyleComboBox.Parent := Small_Editor.AttributesBar;
+  BrushStyleComboBox.Top := Small_Editor.AttributesBar.tag;
+  BrushStyleComboBox.Left := Trunc(Small_Editor.AttributesBar.Width * 0.5) + 2;
+  BrushStyleComboBox.Width := Trunc(Small_Editor.AttributesBar.Width * 0.5) - 4;
   for i := 0 to Length(FillStyles) - 1 do
     BrushStyleComboBox.Items.Add(FillStyles[i]._Type);
   BrushStyleComboBox.OnChange := @OnChange;
   BrushStyleComboBox.Style := csOwnerDrawFixed;
   BrushStyleComboBox.ReadOnly := True;
-  //BrushStyleComboBox.Top := VectGraph.AttributesBar.tag;
-  VectGraph.AttributesBar.tag:=VectGraph.AttributesBar.Tag+10;
+  //BrushStyleComboBox.Top := Small_Editor.AttributesBar.tag;
+  Small_Editor.AttributesBar.tag:=Small_Editor.AttributesBar.Tag+10;
   BrushStyleComboBox.ItemIndex := CurrentStyles.FillStyleNum;
   ReBuild;
 end;
@@ -398,12 +398,12 @@ begin
   DSpin := TSpinEdit.Create(nil);
   DSpin.MinValue := 1;
   DSpin.MaxValue := 100;
-  DSpin.parent := VectGraph.AttributesBar;
-  DSpin.Top := VectGraph.AttributesBar.Tag;
-  DSpin.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
-  DSpin.Width := Trunc(VectGraph.AttributesBar.Width * 0.5) - 4;
+  DSpin.parent := Small_Editor.AttributesBar;
+  DSpin.Top := Small_Editor.AttributesBar.Tag;
+  DSpin.Left := Trunc(Small_Editor.AttributesBar.Width * 0.5) + 2;
+  DSpin.Width := Trunc(Small_Editor.AttributesBar.Width * 0.5) - 4;
   DSpin.OnChange := @OnChange;
-  VectGraph.AttributesBar.Tag:=VectGraph.AttributesBar.Tag + 10;
+  Small_Editor.AttributesBar.Tag:=Small_Editor.AttributesBar.Tag + 10;
   if AboutAttr^.Name = 'FLineWidth' then
   begin
     DSpin.Value := CurrentStyles.LineWidth;
@@ -473,10 +473,10 @@ begin
   if k > 1 then
     change := True;
   ColorBttn := TColorButton.Create(nil);
-  ColorBttn.Parent := VectGraph.AttributesBar;
-  ColorBttn.Left := Trunc(VectGraph.AttributesBar.Width * 0.5) + 2;
+  ColorBttn.Parent := Small_Editor.AttributesBar;
+  ColorBttn.Left := Trunc(Small_Editor.AttributesBar.Width * 0.5) + 2;
   ColorBttn.Width := 80;
-  ColorBttn.Top := VectGraph.AttributesBar.Tag;
+  ColorBttn.Top := Small_Editor.AttributesBar.Tag;
   ColorBttn.OnColorChanged := @OnChange;
   if AboutAttr^.Name = 'FLineColor' then
     ColorBttn.ButtonColor := CurrentStyles.LineColor

@@ -7,13 +7,13 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, FPCanvas, fpjson,
-  UTool, UTransform, UComparator, UDefine, UCreateAttributes, UFigure;
+  UTool, UTransform, UComparator, UDefine, UCreateAttributes, UFigure, About;
 
 type
 
-  { TVectGraph }
+  { TSmall_Editor }
 
-  TVectGraph = class(TForm)
+  TSmall_Editor = class(TForm)
     ActionCls: TAction;
     ActionUnDo: TAction;
     ActionReDo: TAction;
@@ -30,6 +30,10 @@ type
     EditionsReplaseUp: TMenuItem;
     EditionsReplaseDown: TMenuItem;
     EditionsDel: TMenuItem;
+    AboutItems: TMenuItem;
+    Developer: TMenuItem;
+    Functions: TMenuItem;
+    Instruction: TMenuItem;
     Save: TMenuItem;
     Open: TMenuItem;
     MoveLower: TMenuItem;
@@ -43,6 +47,8 @@ type
     TToolUnZoomLoupe: TSpeedButton;
     ToolsBar: TToolBar;
     AttributesBar: TToolBar;
+    procedure DeveloperClick(Sender: TObject);
+    procedure DrawAreaClick(Sender: TObject);
     procedure DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure DrawAreaMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
@@ -54,8 +60,10 @@ type
     procedure ClearScreenClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure BttnToolClck(Sender: TObject);
+    procedure FunctionsClick(Sender: TObject);
     procedure HorizontalScrollScroll(Sender: TObject; ScrollCode: TScrollCode;
       var ScrollPos: integer);
+    procedure InstructionClick(Sender: TObject);
     procedure ItemProgCloseClick(Sender: TObject);
     procedure MoveLowerClick(Sender: TObject);
     procedure MoveUpperClick(Sender: TObject);
@@ -75,7 +83,7 @@ type
   end;
 
 var
-  VectGraph: TVectGraph;
+  Small_Editor: TSmall_Editor;
   IsDrawing: boolean;
   ToolCode: integer;
   MaxDACoor, MinDACoor: TDoublePoint;
@@ -85,9 +93,9 @@ implementation
 
 {$R *.lfm}
 
-{ TVectGraph }
+{ TSmall_Editor }
 
-procedure TVectGraph.FormCreate(Sender: TObject);
+procedure TSmall_Editor.FormCreate(Sender: TObject);
 var
   i: integer;
   Bttn: TSpeedButton;
@@ -116,16 +124,17 @@ begin
   EditFigure := TEditCreate.Create;
   ScaleSpin.MaxValue := MAX_ZOOM;
   ScaleSpin.MinValue := MIN_ZOOM / 100;
+  ToolCode:=-1;
   DrawArea.Invalidate;
 
 end;
 
-procedure TVectGraph.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TSmall_Editor.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 var
   i: integer;
 begin
-  if Button = mbLeft then
+  if (Button = mbLeft) and (ToolCode<>-1) then
   begin
     if ToolCode <> High(ToolConst.Tools) then
       for i := 0 to Length(FigureItems) - 1 do
@@ -136,7 +145,28 @@ begin
   end;
 end;
 
-procedure TVectGraph.DrawAreaMouseMove(Sender: TObject; Shift: TShiftState;
+procedure TSmall_Editor.DrawAreaClick(Sender: TObject);
+begin
+
+end;
+
+procedure TSmall_Editor.DeveloperClick(Sender: TObject);
+var
+  TFile: Text;
+  tmpDev, Dev: String;
+begin
+  AssignFile(TFile,'./Documentation/Developer.txt');
+  Reset(TFile);
+  while(not(EOF(TFile))) do begin
+    Readln(TFile, tmpDev);
+    Dev+=tmpDev+chr(10);
+  end;
+  CloseFile(TFile);
+  Application.MessageBox(pChar(Dev),'Small Editor');
+  //ShowMessage(Dev);
+end;
+
+procedure TSmall_Editor.DrawAreaMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: integer);
 begin
   if IsDrawing then
@@ -146,7 +176,7 @@ begin
   end;
 end;
 
-procedure TVectGraph.DrawAreaMouseUp(Sender: TObject; Button: TMouseButton;
+procedure TSmall_Editor.DrawAreaMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   if IsDrawing then
@@ -159,7 +189,7 @@ begin
   end;
 end;
 
-procedure TVectGraph.DrawAreaPaint(Sender: TObject);
+procedure TSmall_Editor.DrawAreaPaint(Sender: TObject);
 var
   i: integer;
 begin
@@ -188,7 +218,7 @@ begin
 end;
 
 
-procedure TVectGraph.DelSelectedClick(Sender: TObject);
+procedure TSmall_Editor.DelSelectedClick(Sender: TObject);
 var
   i, j: integer;
 begin
@@ -207,7 +237,7 @@ begin
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.ClearScreenClick(Sender: TObject);
+procedure TSmall_Editor.ClearScreenClick(Sender: TObject);
 var
   i: integer;
 begin
@@ -218,7 +248,7 @@ begin
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.EditionsShowAllClick(Sender: TObject);
+procedure TSmall_Editor.EditionsShowAllClick(Sender: TObject);
 begin
   objTransform.RegionLoupe(DrawArea.Width, DrawArea.Height,
     ToRect(objTransform.W2S(MaxDACoor), objTransform.W2S(MinDACoor)));
@@ -226,7 +256,7 @@ begin
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.BttnToolClck(Sender: TObject);
+procedure TSmall_Editor.BttnToolClck(Sender: TObject);
 var
   i: integer;
 begin
@@ -241,40 +271,60 @@ begin
 
 end;
 
-procedure TVectGraph.HorizontalScrollScroll(Sender: TObject;
+procedure TSmall_Editor.FunctionsClick(Sender: TObject);
+var
+  TFile: Text;
+  tmpDev,Dev: String;
+begin
+  AssignFile(TFile,'./Documentation/Functions.txt');
+  Reset(TFile);
+  while(not(EOF(TFile))) do begin
+    Readln(TFile, tmpDev);
+    Dev+=tmpDev+chr(10);
+  end;
+  CloseFile(TFile);
+  Application.MessageBox(pChar(Dev),'Small Editor');
+end;
+
+procedure TSmall_Editor.HorizontalScrollScroll(Sender: TObject;
   ScrollCode: TScrollCode; var ScrollPos: integer);
 begin
   DrawArea.Invalidate;
 end;
 
+procedure TSmall_Editor.InstructionClick(Sender: TObject);
+begin
+  Tools.Show;
+end;
 
-procedure TVectGraph.VerticalScrollScroll(Sender: TObject;
+
+procedure TSmall_Editor.VerticalScrollScroll(Sender: TObject;
   ScrollCode: TScrollCode; var ScrollPos: integer);
 begin
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.ScaleSpinChange(Sender: TObject);
+procedure TSmall_Editor.ScaleSpinChange(Sender: TObject);
 begin
   objTransform.Zoom := ScaleSpin.Value;
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.TToolZoomLoupeClick(Sender: TObject);
+procedure TSmall_Editor.TToolZoomLoupeClick(Sender: TObject);
 begin
   objTransform.ZoomLoupe;
   ScaleSpin.Value := objTransform.Zoom;
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.TToolUnZoomLoupeClick(Sender: TObject);
+procedure TSmall_Editor.TToolUnZoomLoupeClick(Sender: TObject);
 begin
   objTransform.UnZoomLoupe;
   ScaleSpin.Value := objTransform.Zoom;
   DrawArea.Invalidate;
 end;
 
-procedure TVectGraph.ScrolCalc;
+procedure TSmall_Editor.ScrolCalc;
 var
   DARect: TDRect;
   DiffPoint, DATop, DABottom: TDoublePoint;
@@ -329,12 +379,12 @@ begin
 end;
 
 
-procedure TVectGraph.ItemProgCloseClick(Sender: TObject);
+procedure TSmall_Editor.ItemProgCloseClick(Sender: TObject);
 begin
-  VectGraph.Close;
+  Small_Editor.Close;
 end;
 
-procedure TVectGraph.MoveLowerClick(Sender: TObject);
+procedure TSmall_Editor.MoveLowerClick(Sender: TObject);
 var
   i, j: integer;
 begin
@@ -351,7 +401,7 @@ begin
   end;
 end;
 
-procedure TVectGraph.MoveUpperClick(Sender: TObject);
+procedure TSmall_Editor.MoveUpperClick(Sender: TObject);
 var
   i, j: integer;
 begin
@@ -368,7 +418,7 @@ begin
   end;
 end;
 
-procedure TVectGraph.OpenClick(Sender: TObject);
+procedure TSmall_Editor.OpenClick(Sender: TObject);
 var
   jData: TJSONData;
   TFile: Text;
@@ -385,7 +435,7 @@ begin
     try
       jData := GetJSON(Data);
     except
-      ShowMessage('Файл поврежден!#10#13 Загрузка не удалась.');
+      ShowMessage('Файл поврежден! Загрузка не удалась.');
       Exit;
     end;
   end;
@@ -462,7 +512,7 @@ begin
 
 end;
 
-procedure TVectGraph.SaveClick(Sender: TObject);
+procedure TSmall_Editor.SaveClick(Sender: TObject);
 var
   i: TFigure;
   TFile: Text;
