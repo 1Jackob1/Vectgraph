@@ -292,16 +292,21 @@ end;
 procedure TToolLoupe.MouseDown(APoint: TPoint);
 begin
   objTransform.ALRect.TopLeft := APoint;
+  SetLength(FigureItems, Length(FigureItems) + 1);
+  FigureItems[High(FigureItems)] := TSpecialRect.Create;
+  SelectPoint := APoint;
 end;
 
 procedure TToolLoupe.MouseMove(APoint: TPoint);
 begin
   objTransform.ALRect.BottomRight := APoint;
+  EndSelPoint:=APoint;
 end;
 
 procedure TToolLoupe.MouseUp(APoint: TPoint);
 begin
   objTransform.RegionLoupe(APoint.x, APoint.y, objTransform.ALRect);
+  Delete:=true;
 end;
 
 { TToolHand }
@@ -344,7 +349,6 @@ begin
     EndSelPoint := SelectPoint;
   SelectedCount := 0;
   WasClick := False;
-  ;
   if (abs((SelectPoint.X - EndSelPoint.X) * (SelectPoint.Y - EndSelPoint.Y)) < 5) or
     (EndSelPoint.X = 0) or (EndSelPoint.Y = 0) then
   begin
