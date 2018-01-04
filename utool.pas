@@ -125,7 +125,7 @@ type
 var
   ToolConst: TToolReg;
   tmpDP: TDoublePoint;
-  Delete: boolean;
+  DeleteTopFigure: boolean;
   tmpSwap: TFigure;
   SelectedCount: integer;
 
@@ -306,7 +306,7 @@ end;
 procedure TToolLoupe.MouseUp(APoint: TPoint);
 begin
   objTransform.RegionLoupe(APoint.x, APoint.y, objTransform.ALRect);
-  Delete:=true;
+  DeleteTopFigure:=true;
 end;
 
 { TToolHand }
@@ -327,7 +327,7 @@ end;
 
 procedure TToolSelection.MouseDown(APoint: TPoint);
 begin
-  Delete := False;
+  DeleteTopFigure := False;
   SetLength(FigureItems, Length(FigureItems) + 1);
   FigureItems[High(FigureItems)] := TSpecialRect.Create;
   SelectPoint := APoint;
@@ -397,7 +397,7 @@ begin
       SelectedCount += 1;
   end;
   EditSelectedFig;
-  Delete := True;
+  DeleteTopFigure := True;
   if WasClick then
     SelectPoint := EndSelPoint;
 

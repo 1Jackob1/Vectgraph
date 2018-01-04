@@ -5,7 +5,7 @@ unit UFigure;
 interface
 
 uses
-  Classes, SysUtils, Graphics, FPCanvas, Types, fpjsonrtti, fpjson,
+  Classes, SysUtils, Graphics, FPCanvas, Types, typinfo, fpjsonrtti, fpjson,
   UTransform, UDefine, UComparator;
 
 type
@@ -36,7 +36,8 @@ type
     procedure selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint); virtual;
     procedure selectfig(FAPoint, SAPoint: TPoint; AVert: array of TDoublePoint);
       virtual; abstract;
-    function saveFigure(var JText: Text; _ClassName: string):String; virtual;
+    function saveFigure(var JText: Text; Offset: Integer):String; virtual;
+    procedure openFigure(Ajf: TJSONData; k:Integer; APropList: PPropList); Virtual; Abstract;
     procedure defineTopBot; virtual; abstract;
     procedure getFillColor(var AFillColor: TColor); virtual; abstract;
     procedure getFillType(var AFillType: TFPBrushStyle); virtual; abstract;
@@ -65,7 +66,8 @@ type
     procedure getFillType(var AFillType: TFPBrushStyle); override;
     procedure changePoint(FADPoint, SADPoint: TDoublePoint; Code: integer); override;
     procedure defineTopBot; override;
-    function saveFigure(var JText: Text; _ClassName: String): String; override;
+    procedure openFigure(Ajf: TJSONData; k: Integer; APropList: PPropList); override;
+    function saveFigure(var JText: Text; Offset: Integer): String; override;
     property FFillColor: TColor read RFillColor write RFillColor;
     property FFillType: TFPBrushStyle read RFillType write RFillType;
     property FLineColor: TColor read LineColor write LineColor;
@@ -135,6 +137,8 @@ type
     procedure DrawFrame(ACanvas: TCanvas; FAPoint, SAPoint: TPoint;
       AVert: array of TDoublePoint);
     procedure changePoint(FADPoint, SADPoint: TDoublePoint; Code: integer); override;
+    function saveFigure(var JText: Text; Offset: Integer): String; override;
+    procedure openFigure(Ajf: TJSONData; k: Integer; APropList: PPropList); override;
     procedure defineTopBot; override;
   published
     property FLineType: TFPPenStyle read LineType write LineType;
@@ -208,28 +212,24 @@ begin
   exit;
 end;
 
-function TFigure.saveFigure(var JText: Text; _ClassName: String): String;
+function TFigure.saveFigure(var JText: Text; Offset: Integer): String;
 var
-  i: TDoublePoint;
-  j: Integer;
+  PropList: PPropList;
+  k: Integer;
+  //i: TDoublePoint;
+  //j: Integer;
 begin
   Write(JText,'{"Class": "',ClassName,'",');
-  Write(JText,'"LineWidth": ', FLineWidth,',');
-  Write(JText,'"LineColor": ', ColorToRGB(FLineColor),',');
-  Write(JText,'"LineType" : ', Integer(FLineType),',' );
-  Write(JText,'"VertexesCount":',Length(Vert),',');
-  Write(JText,'"Vertexes" :[');
-  j:=0;
-  for i in vert do begin
-    if j<>high(vert) then
-      Write(JText,objTransform.W2S(i).X,',',objTransform.W2S(i).Y,',')//ошибка тут возможно
-      else
-      Write(JText,objTransform.W2S(i).X,',',objTransform.W2S(i).Y);
-    j+=1;
-  end;
-  Write(JText,']}');
-  //Result:=tex JText;
+  k:=GetPropList(Self,PropList);
+  for k:=k downto 1 do
+    Write(JText,'"',PropList^[k-1]^.Name,'":',GetInt64Prop(Self,PropList^[k-1]),',');
+
+  //Write(JText,'{"Class": "',ClassName,'",');
+  //Write(JText,'"FLineWidth": ', FLineWidth,',');
+  //Write(JText,'"FLineColor": ', ColorToRGB(FLineColor),',');
+  //Write(JText,'"FLineType" : ', Integer(FLineType),',' );
 end;
+
 
 { TSmlrRect }
 
@@ -334,18 +334,33 @@ begin
   DPRect.Top := MinCoor;
 end;
 
-function TSmlrRect.saveFigure(var JText: Text; _ClassName: String): String;
+function TSmlrRect.saveFigure(var JText: Text; Offset: Integer): String;
+var
+  PropList: PPropList;
+  k: Integer;
 begin
-  Write(JText,'{"Class": "', ClassName,'",');
-  Write(JText,'"LineWidth": ', FLineWidth,',');
-  Write(JText,'"LineColor": ', ColorToRGB(FLineColor),',');
-  Write(JText,'"LineType" : ', Integer(FLineType),',' );
-  Write(JText,'"FillColor": ',ColorToRGB(FFillColor),',');
-  Write(JText,'"FillType" : ', Integer(FFillType),',');
-  if _ClassName = 'TRoundRect' then Write(JText,'"Flexure" : ', FFlexure,',');
-  Write(JText,'"Bot":[',objTransform.W2S(MaxCoor).X,',', objTransform.W2S(MaxCoor).Y,'],');
-  Write(JText,'"Top":[',objTransform.W2S(MinCoor).X,',', objTransform.W2S(MinCoor).Y,']}');
-  //Result:=JText;
+  inherited saveFigure(JText, Offset);
+  Write(JText,'"Bot":[',objTransform.W2S(MaxCoor).X + Offset,',', objTransform.W2S(MaxCoor).Y+Offset,'],');
+  Write(JText,'"Top":[',objTransform.W2S(MinCoor).X + Offset,',', objTransform.W2S(MinCoor).Y+Offset,']}');
+end;
+
+procedure TSmlrRect.openFigure(Ajf: TJSONData; k:Integer; APropList: PPropList);
+var
+  Point:TPoint;
+begin
+  for k:=k downto 1 do
+    SetInt64Prop(FigureItems[High(FigureItems)], APropList^[k - 1],
+            Ajf.FindPath(APropList^[k - 1]^.Name).AsInteger);
+  with FigureItems[High(FigureItems)] do
+        begin
+          Point.X := Ajf.FindPath('Bot[0]').AsInteger;
+          Point.Y := Ajf.FindPath('Bot[1]').AsInteger;
+          MaxCoor := objTransform.S2W(Point);
+          Point.X := Ajf.FindPath('Top[0]').AsInteger;
+          Point.Y := Ajf.FindPath('Top[1]').AsInteger;
+          MinCoor := objTransform.S2W(Point);
+          defineTopBot;
+        end;
 end;
 
 { TRectangle }
@@ -529,6 +544,44 @@ end;
 procedure TPolyLine.defineTopBot;
 begin
 
+end;
+
+function TPolyLine.saveFigure(var JText: Text; Offset: Integer): String;
+var
+  j, k: Integer;
+  i: TDoublePoint;
+  PropList: PPropList;
+begin
+  inherited saveFigure(JText, Offset);
+  Write(JText,'"VertexesCount":',Length(Vert),',');
+  Write(JText,'"Vertexes" :[');
+  j:=0;
+  for i in vert do begin
+    if j<>high(vert) then
+      Write(JText,objTransform.W2S(i).X+Offset,',',objTransform.W2S(i).Y+Offset,',')
+      else
+      Write(JText,objTransform.W2S(i).X+Offset,',',objTransform.W2S(i).Y+Offset);
+    j+=1;
+  end;
+  Write(JText,']}');
+end;
+
+procedure TPolyLine.openFigure(Ajf: TJSONData; k:Integer; APropList: PPropList);
+var
+  j: Integer;
+  Point: TPoint;
+begin
+  for k:=k downto 1 do
+    SetInt64Prop(FigureItems[High(FigureItems)], APropList^[k - 1],
+            Ajf.FindPath(APropList^[k - 1]^.Name).AsInteger);
+
+  for j := 0 to Ajf.FindPath('VertexesCount').AsInteger - 1 do
+          begin
+            SetLength(vert, Length(vert) + 1);
+            Point.X := Ajf.FindPath('Vertexes[' + IntToStr(j * 2) + ']').AsInteger;
+            Point.Y := Ajf.FindPath('Vertexes[' + IntToStr(j * 2 + 1) + ']').AsInteger;
+            vert[j] := objTransform.S2W(Point);
+          end;
 end;
 
 {TSpecialRect}

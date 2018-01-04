@@ -5,8 +5,8 @@ unit UMain;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  ComCtrls, Buttons, EditBtn, StdCtrls, Spin, Menus, ActnList, FPCanvas, fpjson,
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls, Clipbrd,
+  ComCtrls, Buttons, EditBtn, StdCtrls, typinfo, Spin, Menus, ActnList, FPCanvas, fpjson,
   UTool, UTransform, UComparator, UDefine, UCreateAttributes, UFigure, About;
 
 type
@@ -19,6 +19,7 @@ type
     ActionReDo: TAction;
     ActionList1: TActionList;
     DrawArea: TPaintBox;
+    FilePath: TLabel;
     MainMenu: TMainMenu;
     ItemProg: TMenuItem;
     ItemProgClose: TMenuItem;
@@ -34,19 +35,24 @@ type
     Developer: TMenuItem;
     Functions: TMenuItem;
     Instruction: TMenuItem;
+    CopyFigure: TMenuItem;
+    PasteFigure: TMenuItem;
     Save: TMenuItem;
     Open: TMenuItem;
     MoveLower: TMenuItem;
     MoveUpper: TMenuItem;
-    OpenDialog1: TOpenDialog;
-    SaveDialog1: TSaveDialog;
+    OpenDialog: TOpenDialog;
+    SaveDialog: TSaveDialog;
     ScaleSpin: TFloatSpinEdit;
     HorizontalScroll: TScrollBar;
+    TToolReDo: TSpeedButton;
+    TToolUnDo: TSpeedButton;
     VerticalScroll: TScrollBar;
     TToolZoomLoupe: TSpeedButton;
     TToolUnZoomLoupe: TSpeedButton;
     ToolsBar: TToolBar;
     AttributesBar: TToolBar;
+    procedure CopyFigureClick(Sender: TObject);
     procedure DeveloperClick(Sender: TObject);
     procedure DrawAreaClick(Sender: TObject);
     procedure DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
@@ -58,6 +64,7 @@ type
     procedure DelSelectedClick(Sender: TObject);
     procedure EditionsShowAllClick(Sender: TObject);
     procedure ClearScreenClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormCreate(Sender: TObject);
     procedure BttnToolClck(Sender: TObject);
     procedure FunctionsClick(Sender: TObject);
@@ -68,13 +75,25 @@ type
     procedure MoveLowerClick(Sender: TObject);
     procedure MoveUpperClick(Sender: TObject);
     procedure OpenClick(Sender: TObject);
+    procedure PasteFigureClick(Sender: TObject);
     procedure SaveClick(Sender: TObject);
     procedure ScaleSpinChange(Sender: TObject);
+    procedure TToolReDoClick(Sender: TObject);
+    procedure TToolUnDoClick(Sender: TObject);
     procedure TToolZoomLoupeClick(Sender: TObject);
     procedure TToolUnZoomLoupeClick(Sender: TObject);
     procedure ScrolCalc;
     procedure VerticalScrollScroll(Sender: TObject; ScrollCode: TScrollCode;
       var ScrollPos: integer);
+    //procedure SaveFile(s: String);
+    procedure OpenFile(s: string; Merge: boolean);
+    procedure SaveFile(var AText: Text);
+    procedure PushHistory;
+    procedure PopHistory;
+    procedure SetHistory;
+    procedure NullHist;
+    procedure IsSavedState;
+    function FSaveFile(): string;
 
   private
     { private declarations }
@@ -88,6 +107,12 @@ var
   ToolCode: integer;
   MaxDACoor, MinDACoor: TDoublePoint;
   HorBarPos, VertBarPos: integer;
+  History: array of string;
+  HistoryIndex: integer = -1;
+  WasUnDo: boolean = False;
+  WasReDo: boolean = False;
+  WasSave: boolean = true;
+  DefCondHistory, SavedFigures, CurrentSavedPath: string;
 
 implementation
 
@@ -124,9 +149,12 @@ begin
   EditFigure := TEditCreate.Create;
   ScaleSpin.MaxValue := MAX_ZOOM;
   ScaleSpin.MinValue := MIN_ZOOM / 100;
-  ToolCode:=-1;
+  ToolCode := -1;
+  FilePath.Caption := 'Untitled';
+  DefCondHistory := FSaveFile();
+  SavedFigures := FSaveFile();
+  NullHist;
   DrawArea.Invalidate;
-
 end;
 
 procedure TSmall_Editor.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
@@ -134,12 +162,16 @@ procedure TSmall_Editor.DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
 var
   i: integer;
 begin
-  if (Button = mbLeft) and (ToolCode<>-1) then
+  if (Button = mbLeft) and (ToolCode <> -1) then
   begin
+    if WasUnDo then
+      SetHistory;
+    WasUnDo := False;
+    WasUnDo := False;
     if ToolCode <> High(ToolConst.Tools) then
       for i := 0 to Length(FigureItems) - 1 do
         FigureItems[i].IsSelected := False;
-    //ForAllFigrStyles := CurrentStyles;
+    //if (Length(FigureItems)<>0) and not(FigureItems[high(FigureItems)] is TSpecialRect) then PushHistory;
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
   end;
@@ -153,19 +185,46 @@ end;
 procedure TSmall_Editor.DeveloperClick(Sender: TObject);
 var
   TFile: Text;
-  tmpDev, Dev: String;
+  tmpDev, Dev: string;
 begin
-  AssignFile(TFile,'./Documentation/Developer.txt');
+  AssignFile(TFile, './Documentation/Developer.txt');
   Reset(TFile);
-  while(not(EOF(TFile))) do begin
+  while (not (EOF(TFile))) do
+  begin
     Readln(TFile, tmpDev);
-    Dev+=tmpDev+chr(10);
+    Dev += tmpDev + chr(10);
   end;
   CloseFile(TFile);
-  Application.MessageBox(pChar(Dev),'Small Editor');
-  //ShowMessage(Dev);
+  Application.MessageBox(PChar(Dev), 'Small Editor', 0);
 end;
 
+procedure TSmall_Editor.CopyFigureClick(Sender: TObject);
+var
+  i: TFigure;
+  TFile: Text;
+  copyedFigures: string;
+begin
+  AssignFile(TFile,'34');
+  Rewrite(TFile);
+  Write(TFile, '{"Count": ', SelectedCount, ',');
+  Write(TFile, '"Items":[');
+  for i in FigureItems do
+  begin
+    if not i.IsSelected then Continue;
+    i.saveFigure(TFile,15);
+    if i <> FigureItems[High(FigureItems)] then
+      Write(TFile, ',');
+  end;
+  Write(TFile, ']}');
+  CloseFile(TFile);
+  AssignFile(TFile,'34');
+  Reset(TFile);
+  Read(TFile,copyedFigures);
+  Clipboard.AsText:=copyedFigures;
+  CloseFile(TFile);
+  AssignFile(TFile,'34');
+  Erase(TFile);
+end;
 procedure TSmall_Editor.DrawAreaMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: integer);
 begin
@@ -186,6 +245,10 @@ begin
     DrawArea.Invalidate;
     ScaleSpin.Value := objTransform.Zoom;
     EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
+    if not (FigureItems[high(FigureItems)] is TSpecialRect) then
+      PushHistory;
+    WasSave := False;
+    IsSavedState;
   end;
 end;
 
@@ -207,11 +270,11 @@ begin
     end;
     FigureItems[i].Draw(DrawArea.Canvas, FigureItems[i].IsSelected);
   end;
-  if (Delete) then
+  if (DeleteTopFigure) then
   begin
     FreeAndNil(FigureItems[High(FigureItems)]);
     SetLength(FigureItems, Length(FigureItems) - 1);
-    Delete := False;
+    DeleteTopFigure := False;
     DrawArea.Invalidate;
   end;
   ScrolCalc;
@@ -248,6 +311,20 @@ begin
   DrawArea.Invalidate;
 end;
 
+procedure TSmall_Editor.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+begin
+  if not WasSave then begin
+    case QuestionDlg ('Small Editor','Ваш проект не сохранён! Сохранить его?',mtCustom,[mrYes,'Да', mrNo,'Нет', mrCancel,'Отменить'],'') of
+        mrYes: begin
+              SaveClick(Sender);
+              Small_Editor.Close;
+          end;
+        mrNo:  CanClose:=True;
+        mrCancel: CanClose:=False;
+    end;
+  end;
+end;
+
 procedure TSmall_Editor.EditionsShowAllClick(Sender: TObject);
 begin
   objTransform.RegionLoupe(DrawArea.Width, DrawArea.Height,
@@ -274,16 +351,17 @@ end;
 procedure TSmall_Editor.FunctionsClick(Sender: TObject);
 var
   TFile: Text;
-  tmpDev,Dev: String;
+  tmpDev, Dev: string;
 begin
-  AssignFile(TFile,'./Documentation/Functions.txt');
+  AssignFile(TFile, './Documentation/Functions.txt');
   Reset(TFile);
-  while(not(EOF(TFile))) do begin
+  while (not (EOF(TFile))) do
+  begin
     Readln(TFile, tmpDev);
-    Dev+=tmpDev+chr(10);
+    Dev += tmpDev + chr(10);
   end;
   CloseFile(TFile);
-  Application.MessageBox(pChar(Dev),'Small Editor');
+  Application.MessageBox(PChar(Dev), 'Small Editor', 0);
 end;
 
 procedure TSmall_Editor.HorizontalScrollScroll(Sender: TObject;
@@ -310,10 +388,38 @@ begin
   DrawArea.Invalidate;
 end;
 
+procedure TSmall_Editor.TToolReDoClick(Sender: TObject);
+begin
+  if HistoryIndex < 0 then
+    HistoryIndex := 0;
+  if HistoryIndex + 1 <= High(History) then
+  begin
+    HistoryIndex += 1;
+    WasReDo := True;
+    PopHistory;
+    IsSavedState;
+  end;
+end;
+
+procedure TSmall_Editor.TToolUnDoClick(Sender: TObject);
+begin
+  //if not WasUnDo then begin
+  //  PushHistory;
+  //  HistoryIndex-=1;
+  //end;
+  if HistoryIndex >= 0 then
+    HistoryIndex -= 1;
+  PopHistory;
+  WasUnDo := True;
+  IsSavedState;
+  DrawArea.Invalidate;
+end;
+
 procedure TSmall_Editor.TToolZoomLoupeClick(Sender: TObject);
 begin
   objTransform.ZoomLoupe;
   ScaleSpin.Value := objTransform.Zoom;
+  ScrolCalc;
   DrawArea.Invalidate;
 end;
 
@@ -321,6 +427,7 @@ procedure TSmall_Editor.TToolUnZoomLoupeClick(Sender: TObject);
 begin
   objTransform.UnZoomLoupe;
   ScaleSpin.Value := objTransform.Zoom;
+  ScrolCalc;
   DrawArea.Invalidate;
 end;
 
@@ -420,92 +527,57 @@ end;
 
 procedure TSmall_Editor.OpenClick(Sender: TObject);
 var
-  jData: TJSONData;
   TFile: Text;
-  Point: TPoint;
-  i, j: integer;
   Data: string;
 begin
-  if OpenDialog1.Execute then
-  begin
-    AssignFile(TFile, OpenDialog1.FileName);
-    Reset(TFile);
-    Read(TFile, Data);
-    CloseFile(TFile);
-    try
-      jData := GetJSON(Data);
-    except
+  if not OpenDialog.Execute then
+    Exit;
+  FilePath.Caption := OpenDialog.FileName;
+  AssignFile(TFile, OpenDialog.FileName);
+  Reset(TFile);
+  Read(TFile, Data);
+  CloseFile(TFile);
+  OpenFile(Data,false);
+  SavedFigures:=FSaveFile();
+  NullHist;
+  PushHistory;
+end;
+
+procedure TSmall_Editor.PasteFigureClick(Sender: TObject);
+begin
+  OpenFile(Clipboard.AsText,True);
+end;
+
+procedure TSmall_Editor.OpenFile(s: string; Merge: Boolean);
+var
+  jData, jf: TJSONData;
+  i, k: integer;
+  PropList: PPropList;
+begin
+  try
+    jData := GetJSON(s);
+  except
+    if not Merge then
       ShowMessage('Файл поврежден! Загрузка не удалась.');
-      Exit;
-    end;
+    Exit;
   end;
-  SetLength(FigureItems, 0);
+  if not Merge then
+    SetLength(FigureItems, 0);
   for i := 0 to jData.FindPath('Count').AsInteger - 1 do
   begin
     SetLength(FigureItems, Length(FigureItems) + 1);
-    Data := 'Items[' + IntToStr(i) + '].Class';
-    case jData.FindPath(Data).AsString of
-      'TRectangle', 'TEllipse', 'TRoundRect':
-      begin
-        case jData.FindPath(Data).AsString of
-          'TRectangle': FigureItems[High(FigureItems)] := TRectangle.Create;
-          'TEllipse': FigureItems[High(FigureItems)] := TEllipse.Create;
-          'TRoundRect': FigureItems[High(FigureItems)] := TRoundRect.Create;
-        end;
-        with FigureItems[High(FigureItems)] do
-        begin
-          Data := 'Items[' + IntToStr(i) + '].LineWidth';
-          FLineWidth := jData.FindPath(Data).AsInteger;
-          Data := 'Items[' + IntToStr(i) + '].LineColor';
-          FLineColor := jData.FindPath(Data).AsInteger;
-          Data := 'Items[' + IntToStr(i) + '].LineType';
-          FLineType := TFPPenStyle(jData.FindPath(Data).AsInteger);
-          Data := 'Items[' + IntToStr(i) + '].FillColor';
-          FFillColor := jData.FindPath(Data).AsInteger;
-          Data := 'Items[' + IntToStr(i) + '].FillType';
-          FFillType := TFPBrushStyle(jData.FindPath(Data).AsInteger);
-          if ClassName = 'TRoundRect' then
-          begin
-            Data := 'Items[' + IntToStr(i) + '].Flexure';
-            FFlexure := jData.FindPath(Data).AsInteger;
-          end;
-          Data := 'Items[' + IntToStr(i) + '].Bot[0]';
-          Point.X := jData.FindPath(Data).AsInteger;
-          Data := 'Items[' + IntToStr(i) + '].Bot[1]';
-          Point.Y := jData.FindPath(Data).AsInteger;
-          MaxCoor := objTransform.S2W(Point);
-          Data := 'Items[' + IntToStr(i) + '].Top[0]';
-          Point.X := jData.FindPath(Data).AsInteger;
-          Data := 'Items[' + IntToStr(i) + '].Top[1]';
-          Point.Y := jData.FindPath(Data).AsInteger;
-          MinCoor := objTransform.S2W(Point);
-          defineTopBot;
-        end;
-      end;
-      'TPolyLine':
-      begin
-        FigureItems[High(FigureItems)] := TPolyLine.Create;
-        with FigureItems[High(FigureItems)] do
-        begin
-          Data := 'Items[' + IntToStr(i) + '].LineWidth';
-          FLineWidth := jData.FindPath(Data).AsInteger;
-          Data := 'Items[' + IntToStr(i) + '].LineColor';
-          FLineColor := jData.FindPath(Data).AsInteger;
-          Data := 'Items[' + IntToStr(i) + '].LineType';
-          FLineType := TFPPenStyle(jData.FindPath(Data).AsInteger);
-          Data := 'Items[' + IntToStr(i) + '].VertexesCount';
-          for j := 0 to jData.FindPath(Data).AsInteger - 1 do
-          begin
-            SetLength(vert, Length(vert) + 1);
-            Data := 'Items[' + IntToStr(i) + '].Vertexes[' + IntToStr(j * 2) + ']';
-            Point.X := jData.FindPath(Data).AsInteger;
-            Data := 'Items[' + IntToStr(i) + '].Vertexes[' + IntToStr(j * 2 + 1) + ']';
-            Point.Y := jData.FindPath(Data).AsInteger;
-            vert[j] := objTransform.S2W(Point);
-          end;
-        end;
-      end;
+    jf := jData.FindPath('Items').Items[i];
+
+    case jf.FindPath('Class').AsString of
+      'TRectangle': FigureItems[High(FigureItems)] := TRectangle.Create;
+      'TEllipse': FigureItems[High(FigureItems)] := TEllipse.Create;
+      'TRoundRect': FigureItems[High(FigureItems)] := TRoundRect.Create;
+      'TPolyLine': FigureItems[High(FigureItems)] := TPolyLine.Create;
     end;
+    if FigureItems[High(FigureItems)] = nil then
+      exit;
+    k := GetPropList(FigureItems[High(FigureItems)], PropList);
+    FigureItems[High(FigureItems)].openFigure(jf, k, PropList);
   end;
   jData.Free;
   DrawArea.Invalidate;
@@ -514,24 +586,116 @@ end;
 
 procedure TSmall_Editor.SaveClick(Sender: TObject);
 var
-  i: TFigure;
   TFile: Text;
 begin
-  if SaveDialog1.Execute then
+  if not SaveDialog.Execute then
+    Exit;
+
+  AssignFile(TFile, SaveDialog.FileName);
+  Rewrite(TFile);
+  SaveFile(TFile);
+  CloseFile(TFile);
+  FilePath.Caption := SaveDialog.FileName;
+  Application.MessageBox('Файл успешно сохранен!', 'Small Editor', 0);
+  SavedFigures:=FSaveFile();
+  WasSave := True;
+end;
+
+procedure TSmall_Editor.SaveFile(var AText: Text);
+var
+  i: TFigure;
+begin
+  Write(AText, '{"Count": ', Length(FigureItems), ',');
+  Write(AText, '"Items":[');
+  for i in FigureItems do
   begin
-    AssignFile(TFile, SaveDialog1.FileName);
-    Rewrite(TFile);
-    Write(TFile, '{"Count": ', Length(FigureItems), ',');
-    Write(TFile, '"Items":[');
-    for i in FigureItems do
-    begin
-      i.saveFigure(TFile, i.ClassName);
-      if i <> FigureItems[High(FigureItems)] then
-        Write(TFile, ',');
-    end;
-    Write(TFile, ']}');
-    CloseFile(TFile);
+    i.saveFigure(AText, 0);
+    if i <> FigureItems[High(FigureItems)] then
+      Write(AText, ',');
   end;
+  Write(AText, ']}');
+end;
+
+function TSmall_Editor.FSaveFile(): string;
+var
+  AFText: Text;
+  DataSave, tmpFilePath: string;
+begin
+  tmpFilePath:='rfghdfuilgavlkjttlrsueihtyjiegy23523525hsdkgdgh84t8gcguiwegt83.txt';
+  AssignFile(AFText, tmpFilePath);
+  Rewrite(AFText);
+  SaveFile(AFText);
+  CloseFile(AFText);
+  AssignFile(AFText, tmpFilePath);
+  Reset(AFText);
+  Read(AFText, DataSave);
+  FSaveFile := DataSave;
+  CloseFile(AFText);
+  AssignFile(AFText, tmpFilePath);
+  Erase(AFText);
+end;
+
+procedure TSmall_Editor.PushHistory;
+begin
+  if Length(FigureItems) = 0 then
+    exit;
+  SetLength(History, Length(History) + 1);
+  History[High(History)] := FSaveFile();
+  HistoryIndex := High(History);
+end;
+
+procedure TSmall_Editor.PopHistory;
+begin
+  if (HistoryIndex <= 0) then
+    HistoryIndex := 0;
+  OpenFile(History[HistoryIndex],false);
+end;
+
+procedure TSmall_Editor.SetHistory;
+begin
+  //if not WasUnDo then exit;
+  if HistoryIndex < 0 then
+  begin
+    SetLength(History, 0);
+    NullHist;
+    exit;
+  end;
+  SetLength(History, (HistoryIndex + 1));
+  if Length(History) = 0 then
+    NullHist;
+end;
+
+procedure TSmall_Editor.NullHist;
+begin
+  SetLength(History, 1);
+  History[0] := DefCondHistory;
+  HistoryIndex := High(History);
+end;
+
+procedure TSmall_Editor.IsSavedState;
+var
+  tmpStr: string;
+  LentmpStr: integer;
+begin
+  tmpStr := FilePath.Caption;
+  LentmpStr := Length(tmpStr);
+  if History[HistoryIndex] = SavedFigures then
+      WasSave := True
+    else
+      WasSave := False;
+  if not WasSave then begin
+    if tmpStr[LentmpStr] = '*' then
+        exit;
+      tmpStr += '*';
+      FilePath.Caption := tmpStr;
+    end
+    else
+    begin
+      if tmpStr[LentmpStr] = '*' then
+        Delete(tmpStr, LentmpStr, 1);
+      FilePath.Caption := tmpStr;
+      WasSave := True;
+    end;
 end;
 
 end.
