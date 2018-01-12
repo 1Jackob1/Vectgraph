@@ -175,10 +175,10 @@ end;
 
 procedure TFigure.SetDefFigrStyles(Selected: boolean);
 begin
-  LineWidth := FLineWidth;
-  LineColor := FLineColor;
-  LineType := FLineType;
-
+  LineWidth := CurrentStyles.LineWidth;
+  LineColor := CurrentStyles.LineColor;
+  LineType := TFPPenStyle(CurrentStyles.LineStyleNum);
+  RFillType:= TFPBrushStyle(CurrentStyles.FillStyleNum);
 end;
 
 procedure TFigure.selectfig(FAPoint, SAPoint, FFAPoint, FSAPoint: TPoint);
@@ -216,18 +216,12 @@ function TFigure.saveFigure(var JText: Text; Offset: Integer): String;
 var
   PropList: PPropList;
   k: Integer;
-  //i: TDoublePoint;
-  //j: Integer;
 begin
   Write(JText,'{"Class": "',ClassName,'",');
   k:=GetPropList(Self,PropList);
   for k:=k downto 1 do
     Write(JText,'"',PropList^[k-1]^.Name,'":',GetInt64Prop(Self,PropList^[k-1]),',');
 
-  //Write(JText,'{"Class": "',ClassName,'",');
-  //Write(JText,'"FLineWidth": ', FLineWidth,',');
-  //Write(JText,'"FLineColor": ', ColorToRGB(FLineColor),',');
-  //Write(JText,'"FLineType" : ', Integer(FLineType),',' );
 end;
 
 
@@ -422,9 +416,7 @@ end;
 
 constructor TPolyLine.Create;
 begin
-  LineWidth := FLineWidth;
-  LineType := FLineType;
-  LineColor := FLineColor;
+  SetDefFigrStyles(False);
 end;
 
 procedure TPolyLine.NextPoint(ADPoint: TDoublePoint);

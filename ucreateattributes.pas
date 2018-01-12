@@ -149,6 +149,7 @@ end;
 
 procedure TFigureAttr.OnChange(Sender: TObject);
 begin
+  Small_Editor.PushHistory;
   Small_Editor.DrawArea.Invalidate;
 end;
 
@@ -339,7 +340,7 @@ begin
   //BrushStyleComboBox.Top := Small_Editor.AttributesBar.tag;
   Small_Editor.AttributesBar.tag:=Small_Editor.AttributesBar.Tag+10;
   BrushStyleComboBox.ItemIndex := CurrentStyles.FillStyleNum;
-  ReBuild;
+  //ReBuild;
 end;
 
 procedure TBrushStyleEdit.OnChange(Sender: TObject);
@@ -413,7 +414,7 @@ begin
     DSpin.Value := CurrentStyles.Flexure;
   end;
 
-  ReBuild;
+  //ReBuild;
 end;
 
 procedure TEditSpin.OnChange(Sender: TObject);
