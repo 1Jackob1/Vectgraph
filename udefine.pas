@@ -62,6 +62,14 @@ const
   MIN_ZOOM: real = 100;
   MAX_ZOOM: real = 10000;
 
+var
+  HistoryIndex: integer = -1;
+  WasUnDo: boolean = False;
+  WasReDo: boolean = False;
+  WasChanged: boolean = True;
+  WasSaved: boolean = False;
+  WasOpened: boolean = False;
+
 implementation
 
 end.

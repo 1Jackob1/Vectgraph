@@ -36,6 +36,7 @@ type
     Functions: TMenuItem;
     Instruction: TMenuItem;
     CopyFigure: TMenuItem;
+    SaveAs: TMenuItem;
     PasteFigure: TMenuItem;
     Save: TMenuItem;
     Open: TMenuItem;
@@ -43,6 +44,7 @@ type
     MoveUpper: TMenuItem;
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
+    SaveAsDialog: TSaveDialog;
     ScaleSpin: TFloatSpinEdit;
     HorizontalScroll: TScrollBar;
     TToolReDo: TSpeedButton;
@@ -76,6 +78,7 @@ type
     procedure MoveUpperClick(Sender: TObject);
     procedure OpenClick(Sender: TObject);
     procedure PasteFigureClick(Sender: TObject);
+    procedure SaveAsClick(Sender: TObject);
     procedure SaveClick(Sender: TObject);
     procedure ScaleSpinChange(Sender: TObject);
     procedure TToolReDoClick(Sender: TObject);
@@ -93,9 +96,11 @@ type
     procedure SetHistory;
     procedure NullHist;
     procedure IsSavedState;
+    procedure Saving;
     function FSaveFile(): string;
 
   private
+
     { private declarations }
   public
     { public declarations }
@@ -108,10 +113,6 @@ var
   MaxDACoor, MinDACoor: TDoublePoint;
   HorBarPos, VertBarPos: integer;
   History: array of string;
-  HistoryIndex: integer = -1;
-  WasUnDo: boolean = False;
-  WasReDo: boolean = False;
-  WasSave: boolean = true;
   DefCondHistory, SavedFigures, CurrentSavedPath: string;
 
 implementation
@@ -171,7 +172,6 @@ begin
     if ToolCode <> High(ToolConst.Tools) then
       for i := 0 to Length(FigureItems) - 1 do
         FigureItems[i].IsSelected := False;
-    //if (Length(FigureItems)<>0) and not(FigureItems[high(FigureItems)] is TSpecialRect) then PushHistory;
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
   end;
@@ -204,27 +204,29 @@ var
   TFile: Text;
   copyedFigures: string;
 begin
-  AssignFile(TFile,'34');
+  AssignFile(TFile, '34');
   Rewrite(TFile);
   Write(TFile, '{"Count": ', SelectedCount, ',');
   Write(TFile, '"Items":[');
   for i in FigureItems do
   begin
-    if not i.IsSelected then Continue;
-    i.saveFigure(TFile,15);
+    if not i.IsSelected then
+      Continue;
+    i.saveFigure(TFile, 15);
     if i <> FigureItems[High(FigureItems)] then
       Write(TFile, ',');
   end;
   Write(TFile, ']}');
   CloseFile(TFile);
-  AssignFile(TFile,'34');
+  AssignFile(TFile, '34');
   Reset(TFile);
-  Read(TFile,copyedFigures);
-  Clipboard.AsText:=copyedFigures;
+  Read(TFile, copyedFigures);
+  Clipboard.AsText := copyedFigures;
   CloseFile(TFile);
-  AssignFile(TFile,'34');
+  AssignFile(TFile, '34');
   Erase(TFile);
 end;
+
 procedure TSmall_Editor.DrawAreaMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: integer);
 begin
@@ -247,7 +249,7 @@ begin
     EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
     if not (FigureItems[high(FigureItems)] is TSpecialRect) then
       PushHistory;
-    WasSave := False;
+    WasChanged := False;
     IsSavedState;
   end;
 end;
@@ -297,6 +299,7 @@ begin
     end;
   end;
   setLength(FigureItems, j);
+  PushHistory;
   DrawArea.Invalidate;
 end;
 
@@ -308,19 +311,23 @@ begin
     FreeAndNil(FigureItems[i]);
   SetLength(FigureItems, 0);
   ScrolCalc;
+  PushHistory;
   DrawArea.Invalidate;
 end;
 
 procedure TSmall_Editor.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
-  if not WasSave then begin
-    case QuestionDlg ('Small Editor','Ваш проект не сохранён! Сохранить его?',mtCustom,[mrYes,'Да', mrNo,'Нет', mrCancel,'Отменить'],'') of
-        mrYes: begin
-              SaveClick(Sender);
-              Small_Editor.Close;
-          end;
-        mrNo:  CanClose:=True;
-        mrCancel: CanClose:=False;
+  if not WasChanged then
+  begin
+    case QuestionDlg('Small Editor', 'Ваш проект не сохранён! Сохранить его?',
+        mtCustom, [mrYes, 'Да', mrNo, 'Нет', mrCancel, 'Отменить'], '') of
+      mrYes:
+      begin
+        SaveClick(Sender);
+        Small_Editor.Close;
+      end;
+      mrNo: CanClose := True;
+      mrCancel: CanClose := False;
     end;
   end;
 end;
@@ -403,10 +410,6 @@ end;
 
 procedure TSmall_Editor.TToolUnDoClick(Sender: TObject);
 begin
-  //if not WasUnDo then begin
-  //  PushHistory;
-  //  HistoryIndex-=1;
-  //end;
   if HistoryIndex >= 0 then
     HistoryIndex -= 1;
   PopHistory;
@@ -537,18 +540,28 @@ begin
   Reset(TFile);
   Read(TFile, Data);
   CloseFile(TFile);
-  OpenFile(Data,false);
-  SavedFigures:=FSaveFile();
+  OpenFile(Data, False);
+  SavedFigures := FSaveFile();
   NullHist;
   PushHistory;
+  WasSaved:=True;
+  WasOpened:=True;
+  CurrentSavedPath:=OpenDialog.FileName;
 end;
 
 procedure TSmall_Editor.PasteFigureClick(Sender: TObject);
 begin
-  OpenFile(Clipboard.AsText,True);
+  OpenFile(Clipboard.AsText, True);
 end;
 
-procedure TSmall_Editor.OpenFile(s: string; Merge: Boolean);
+procedure TSmall_Editor.SaveAsClick(Sender: TObject);
+begin
+  if not SaveAsDialog.Execute then exit;
+  CurrentSavedPath:=SaveAsDialog.FileName;
+  Saving;
+end;
+
+procedure TSmall_Editor.OpenFile(s: string; Merge: boolean);
 var
   jData, jf: TJSONData;
   i, k: integer;
@@ -582,23 +595,30 @@ begin
   jData.Free;
   DrawArea.Invalidate;
 
+
 end;
 
 procedure TSmall_Editor.SaveClick(Sender: TObject);
+begin
+  if not WasSaved and not SaveDialog.Execute then
+      Exit;
+  if (not WasOpened) and (SaveDialog.FileName <> '') then
+    CurrentSavedPath:=SaveDialog.FileName;
+  Saving;
+end;
+
+procedure TSmall_Editor.Saving;
 var
   TFile: Text;
 begin
-  if not SaveDialog.Execute then
-    Exit;
-
-  AssignFile(TFile, SaveDialog.FileName);
+  AssignFile(TFile, CurrentSavedPath);
   Rewrite(TFile);
   SaveFile(TFile);
   CloseFile(TFile);
-  FilePath.Caption := SaveDialog.FileName;
-  Application.MessageBox('Файл успешно сохранен!', 'Small Editor', 0);
-  SavedFigures:=FSaveFile();
-  WasSave := True;
+  FilePath.Caption := CurrentSavedPath;
+  SavedFigures := FSaveFile();
+  WasChanged := True;
+  WasSaved:=True;
 end;
 
 procedure TSmall_Editor.SaveFile(var AText: Text);
@@ -621,7 +641,7 @@ var
   AFText: Text;
   DataSave, tmpFilePath: string;
 begin
-  tmpFilePath:='rfghdfuilgavlkjttlrsueihtyjiegy23523525hsdkgdgh84t8gcguiwegt83.txt';
+  tmpFilePath := 'rfghdfuilgavlkjttlrsueihtyjiegy23523525hsdkgdgh84t8gcguiwegt83.txt';
   AssignFile(AFText, tmpFilePath);
   Rewrite(AFText);
   SaveFile(AFText);
@@ -648,7 +668,7 @@ procedure TSmall_Editor.PopHistory;
 begin
   if (HistoryIndex <= 0) then
     HistoryIndex := 0;
-  OpenFile(History[HistoryIndex],false);
+  OpenFile(History[HistoryIndex], False);
 end;
 
 procedure TSmall_Editor.SetHistory;
@@ -680,22 +700,23 @@ begin
   tmpStr := FilePath.Caption;
   LentmpStr := Length(tmpStr);
   if History[HistoryIndex] = SavedFigures then
-      WasSave := True
-    else
-      WasSave := False;
-  if not WasSave then begin
+    WasChanged := True
+  else
+    WasChanged := False;
+  if not WasChanged then
+  begin
     if tmpStr[LentmpStr] = '*' then
-        exit;
-      tmpStr += '*';
-      FilePath.Caption := tmpStr;
-    end
-    else
-    begin
-      if tmpStr[LentmpStr] = '*' then
-        Delete(tmpStr, LentmpStr, 1);
-      FilePath.Caption := tmpStr;
-      WasSave := True;
-    end;
+      exit;
+    tmpStr += '*';
+    FilePath.Caption := tmpStr;
+  end
+  else
+  begin
+    if tmpStr[LentmpStr] = '*' then
+      Delete(tmpStr, LentmpStr, 1);
+    FilePath.Caption := tmpStr;
+    WasChanged := True;
+  end;
 end;
 
 end.
