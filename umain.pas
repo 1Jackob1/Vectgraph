@@ -97,6 +97,7 @@ type
     procedure NullHist;
     procedure IsSavedState;
     procedure Saving;
+    procedure PushHistAndState;
     function FSaveFile(): string;
 
   private
@@ -248,7 +249,7 @@ begin
     ScaleSpin.Value := objTransform.Zoom;
     EditFigure.SelectAttrs(TPersistent(ToolConst.Tools[ToolCode].CreateAttributes));
     if not (FigureItems[high(FigureItems)] is TSpecialRect) then
-      PushHistory;
+      PushHistAndState;
     WasChanged := False;
     IsSavedState;
   end;
@@ -299,8 +300,7 @@ begin
     end;
   end;
   setLength(FigureItems, j);
-  PushHistory;
-  DrawArea.Invalidate;
+  PushHistAndState;
 end;
 
 procedure TSmall_Editor.ClearScreenClick(Sender: TObject);
@@ -311,8 +311,7 @@ begin
     FreeAndNil(FigureItems[i]);
   SetLength(FigureItems, 0);
   ScrolCalc;
-  PushHistory;
-  DrawArea.Invalidate;
+  PushHistAndState
 end;
 
 procedure TSmall_Editor.FormCloseQuery(Sender: TObject; var CanClose: boolean);
@@ -504,11 +503,11 @@ begin
     if FigureItems[j].IsSelected then
       while i > 0 do
       begin
-        Swap(FigureItems[i], FigureItems[i - 1]);
+        Swap(FigureItems[j], FigureItems[i - 1]);
         i -= 1;
       end;
-    DrawArea.Invalidate;
   end;
+  PushHistAndState
 end;
 
 procedure TSmall_Editor.MoveUpperClick(Sender: TObject);
@@ -519,13 +518,13 @@ begin
   begin
     i := j;
     if FigureItems[j].IsSelected then
-      while i < Length(FigureItems) - 1 do
+      while i < Length(FigureItems) -  1 do
       begin
-        Swap(FigureItems[i], FigureItems[i + 1]);
+        Swap(FigureItems[j], FigureItems[i + 1]);
         i += 1;
       end;
-    DrawArea.Invalidate;
   end;
+  PushHistAndState;
 end;
 
 procedure TSmall_Editor.OpenClick(Sender: TObject);
@@ -619,6 +618,13 @@ begin
   SavedFigures := FSaveFile();
   WasChanged := True;
   WasSaved:=True;
+end;
+
+procedure TSmall_Editor.PushHistAndState;
+begin
+  PushHistory;
+  IsSavedState;
+  DrawArea.Invalidate;
 end;
 
 procedure TSmall_Editor.SaveFile(var AText: Text);
