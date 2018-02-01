@@ -56,7 +56,6 @@ type
     AttributesBar: TToolBar;
     procedure CopyFigureClick(Sender: TObject);
     procedure DeveloperClick(Sender: TObject);
-    procedure DrawAreaClick(Sender: TObject);
     procedure DrawAreaMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure DrawAreaMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
@@ -99,6 +98,7 @@ type
     procedure Saving;
     procedure PushHistAndState;
     function FSaveFile(): string;
+    procedure SetFilePath;
 
   private
 
@@ -176,11 +176,6 @@ begin
     IsDrawing := True;
     ToolConst.Tools[ToolCode].MouseDown(Point(X, Y));
   end;
-end;
-
-procedure TSmall_Editor.DrawAreaClick(Sender: TObject);
-begin
-
 end;
 
 procedure TSmall_Editor.DeveloperClick(Sender: TObject);
@@ -554,10 +549,36 @@ begin
 end;
 
 procedure TSmall_Editor.SaveAsClick(Sender: TObject);
+var
+  Sbitmap: TBitmap;
+  Spng: TPortableNetworkGraphic;
+  Sjpg: TJPEGImage;
 begin
   if not SaveAsDialog.Execute then exit;
   CurrentSavedPath:=SaveAsDialog.FileName;
-  Saving;
+  Sbitmap:=TBitmap.Create;
+  Sbitmap.LoadFromDevice(DrawArea.Canvas.Handle);
+  Sbitmap.Width:=DrawArea.Width;
+  Sbitmap.Height:=DrawArea.Height;
+  case SaveAsDialog.FilterIndex of
+    1: Saving;   //json
+    2:begin      //png
+      Spng:=TPortableNetworkGraphic.Create;
+      Spng.Assign(Sbitmap);
+      Spng.SaveToFile(SaveAsDialog.FileName);
+      SetFilePath;
+      end;
+    3: begin     //bmp
+       Sbitmap.SaveToFile(SaveAsDialog.FileName);
+       SetFilePath;
+    end;
+    4:begin//jpg
+      Sjpg:=TJPEGImage.Create;
+      Sjpg.Assign(Sbitmap);
+      Sjpg.SaveToFile(SaveAsDialog.FileName);
+      SetFilePath;
+    end;
+  end;
 end;
 
 procedure TSmall_Editor.OpenFile(s: string; Merge: boolean);
@@ -659,6 +680,14 @@ begin
   CloseFile(AFText);
   AssignFile(AFText, tmpFilePath);
   Erase(AFText);
+end;
+
+procedure TSmall_Editor.setFilePath;
+begin
+  FilePath.Caption := CurrentSavedPath;
+  SavedFigures := FSaveFile();
+  WasChanged := True;
+  WasSaved:=True;
 end;
 
 procedure TSmall_Editor.PushHistory;

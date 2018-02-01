@@ -4,8 +4,8 @@ object Small_Editor: TSmall_Editor
   Top = 320
   Width = 1183
   Caption = 'Small Editor'
-  ClientHeight = 0
-  ClientWidth = 0
+  ClientHeight = 568
+  ClientWidth = 1183
   Color = clWhite
   Icon.Data = {
     4E45000000000100010041410000010020003845000016000000280000004100
@@ -570,12 +570,11 @@ object Small_Editor: TSmall_Editor
   Position = poScreenCenter
   LCLVersion = '1.6.4.0'
   object DrawArea: TPaintBox
-    Left = 0
-    Height = 0
-    Top = 0
-    Width = 0
+    Left = 120
+    Height = 491
+    Top = 40
+    Width = 1049
     Align = alClient
-    OnClick = DrawAreaClick
     OnMouseDown = DrawAreaMouseDown
     OnMouseMove = DrawAreaMouseMove
     OnMouseUp = DrawAreaMouseUp
@@ -585,13 +584,13 @@ object Small_Editor: TSmall_Editor
     Left = 0
     Height = 40
     Top = 0
-    Width = 0
+    Width = 1183
     Caption = 'ToolsBar'
     Color = 15066597
     ParentColor = False
     TabOrder = 0
     object TToolZoomLoupe: TSpeedButton
-      Left = 0
+      Left = 118
       Height = 38
       Top = 2
       Width = 39
@@ -803,7 +802,7 @@ object Small_Editor: TSmall_Editor
       OnClick = TToolZoomLoupeClick
     end
     object TToolUnZoomLoupe: TSpeedButton
-      Left = 0
+      Left = 79
       Height = 38
       Top = 2
       Width = 39
@@ -1015,7 +1014,7 @@ object Small_Editor: TSmall_Editor
       OnClick = TToolUnZoomLoupeClick
     end
     object TToolReDo: TSpeedButton
-      Left = 0
+      Left = 40
       Height = 38
       Top = 2
       Width = 39
@@ -1233,7 +1232,7 @@ object Small_Editor: TSmall_Editor
       OnClick = TToolReDoClick
     end
     object TToolUnDo: TSpeedButton
-      Left = 0
+      Left = 1
       Height = 38
       Top = 2
       Width = 39
@@ -1397,8 +1396,8 @@ object Small_Editor: TSmall_Editor
   end
   object AttributesBar: TToolBar
     Left = 0
-    Height = 0
-    Top = 0
+    Height = 491
+    Top = 40
     Width = 120
     Align = alLeft
     BorderWidth = 3
@@ -1409,7 +1408,7 @@ object Small_Editor: TSmall_Editor
     object ScaleSpin: TFloatSpinEdit
       Left = 1
       Height = 23
-      Top = -22
+      Top = 468
       Width = 119
       Align = alBottom
       AutoSelect = False
@@ -1425,17 +1424,17 @@ object Small_Editor: TSmall_Editor
   object HorizontalScroll: TScrollBar
     Left = 0
     Height = 17
-    Top = -17
-    Width = 0
+    Top = 531
+    Width = 1183
     Align = alBottom
     PageSize = 0
     TabOrder = 2
     OnScroll = HorizontalScrollScroll
   end
   object VerticalScroll: TScrollBar
-    Left = -14
-    Height = 0
-    Top = 0
+    Left = 1169
+    Height = 491
+    Top = 40
     Width = 14
     Align = alRight
     Kind = sbVertical
@@ -1445,9 +1444,9 @@ object Small_Editor: TSmall_Editor
   end
   object FilePath: TLabel
     Left = 0
-    Height = 15
-    Top = -15
-    Width = 0
+    Height = 20
+    Top = 548
+    Width = 1183
     Align = alBottom
     Caption = 'FilePath'
     Color = 15263976
@@ -1901,8 +1900,8 @@ object Small_Editor: TSmall_Editor
     top = 56
   end
   object SaveAsDialog: TSaveDialog
-    Filter = '*.json|*.json'
-    left = 240
+    Filter = '*.json|*.json|*.bmp|*.bmp|*.jpg|*.jpg|*.png|*.png'
+    left = 360
     top = 56
   end
 end
